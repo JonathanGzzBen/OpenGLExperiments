@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 
-project(OpenGLExperiments)
+project(Triangle)
 
 
 include(FetchContent)
@@ -25,7 +25,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(glfw glew)
 
-add_executable(OpenGLExperiments opengl_experiments.cpp)
-target_compile_definitions(OpenGLExperiments PRIVATE EXPERIMENT_NAME="OpenGLExperiments")
-target_link_libraries(OpenGLExperiments glfw libglew_static)
-set_target_properties(OpenGLExperiments PROPERTIES CXX_STANDARD 20)
+add_executable(Triangle opengl_experiments.cpp)
+target_compile_definitions(Triangle PRIVATE EXPERIMENT_NAME="Triangle")
+target_link_libraries(Triangle glfw libglew_static)
+set_target_properties(Triangle PROPERTIES CXX_STANDARD 20)
