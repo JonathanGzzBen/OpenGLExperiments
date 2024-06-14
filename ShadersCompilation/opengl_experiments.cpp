@@ -9,19 +9,19 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-auto error_callback(int error, const char* description) {
+auto error_callback(int error, const char *description) {
   std::cerr << "Error " << error << ": " << description << "\n";
 }
 
-static void key_callback(GLFWwindow* window, int key, int scancode, int action,
+static void key_callback(GLFWwindow *window, int key, int scancode, int action,
                          int mods) {
   if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
-auto GetShaderFromFile(const std::string& filename,
-                       GLenum type) -> unsigned int {
-  const auto read_file = [](const std::string& filename) -> std::string {
+auto GetShaderFromFile(const std::string &filename, GLenum type)
+    -> unsigned int {
+  const auto read_file = [](const std::string &filename) -> std::string {
     auto input = std::ifstream(filename, std::ios::binary);
     if (!input.is_open()) {
       throw std::runtime_error("Could not read file " + filename + "\n");
@@ -54,7 +54,7 @@ auto main() -> int {
     std::exit(EXIT_FAILURE);
   }
 
-  GLFWwindow* window =
+  GLFWwindow *window =
       glfwCreateWindow(640, 480, EXPERIMENT_NAME, nullptr, nullptr);
 
   if (!window) {

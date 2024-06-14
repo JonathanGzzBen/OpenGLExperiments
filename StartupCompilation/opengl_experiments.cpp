@@ -21,7 +21,7 @@ auto main() -> int {
     std::exit(EXIT_FAILURE);
   }
 
-  GLFWwindow* window =
+  GLFWwindow *window =
       glfwCreateWindow(640, 480, EXPERIMENT_NAME, nullptr, nullptr);
 
   if (!window) {

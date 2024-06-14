@@ -19,8 +19,8 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action,
     glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
-auto GetShaderFromFile(const std::string& filename,
-                       GLenum type) -> unsigned int {
+auto GetShaderFromFile(const std::string& filename, GLenum type)
+    -> unsigned int {
   const auto read_file = [](const std::string& filename) -> std::string {
     auto input = std::ifstream(filename, std::ios::binary);
     if (!input.is_open()) {
