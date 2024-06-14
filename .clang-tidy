@@ -1,0 +1,17 @@
+---
+Checks: "-*,
+		clang-diagnostic-*,
+		-clang-diagnostic-unused-value,
+		clang-analyzer-*,
+		bugprone-*,
+		-bugprone-easily-swappable-parameters,
+		performance-*,
+		modernize-*,
+		-modernize-avoid-c-arrays,
+		readability-*,
+		-readability-magic-numbers,
+		readability-braces-around-statements,
+		readability-inconsistent-declaration-parameter-name,
+		readability-named-parameter
+"
+FormatStyle: "Google"

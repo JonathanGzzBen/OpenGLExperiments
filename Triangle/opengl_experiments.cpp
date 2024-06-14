@@ -15,8 +15,9 @@ auto error_callback(int error, const char* description) {
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action,
                          int mods) {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, GLFW_TRUE);
+  }
 }
 
 auto GetShaderFromFile(const std::string& filename, GLenum type)
@@ -32,13 +33,13 @@ auto GetShaderFromFile(const std::string& filename, GLenum type)
   };
   const auto shader = glCreateShader(type);
   const auto source_code = read_file(filename);
-  const auto source_pointer = source_code.c_str();
+  const auto* const source_pointer = source_code.c_str();
   glShaderSource(shader, 1, &(source_pointer), nullptr);
 
   glCompileShader(shader);
-  int compilation_succesful = false;
+  int compilation_succesful = 0;
   glGetShaderiv(shader, GL_COMPILE_STATUS, &compilation_succesful);
-  if (!compilation_succesful) {
+  if (compilation_succesful == 0) {
     GLsizei log_length = 0;
     const unsigned int buf_len = 1024;
     GLchar message[buf_len];
@@ -49,7 +50,7 @@ auto GetShaderFromFile(const std::string& filename, GLenum type)
 }
 
 auto main() -> int {
-  if (!glfwInit()) {
+  if (glfwInit() != GLFW_TRUE) {
     std::cerr << "Initialization failed\n";
     std::exit(EXIT_FAILURE);
   }
@@ -57,7 +58,7 @@ auto main() -> int {
   GLFWwindow* window =
       glfwCreateWindow(640, 480, EXPERIMENT_NAME, nullptr, nullptr);
 
-  if (!window) {
+  if (window == nullptr) {
     std::cerr << "Window creation failed\n";
     std::exit(EXIT_FAILURE);
   }
@@ -68,7 +69,6 @@ auto main() -> int {
   glfwSwapInterval(1);  // Enable vsync
 
   const auto glew_err = glewInit();
-  glewExperimental = true;
   if (GLEW_OK != glew_err) {
     fprintf(stderr, "Glew Error: %s\n", glewGetErrorString(glew_err));
   }
@@ -84,7 +84,7 @@ auto main() -> int {
   glLinkProgram(program);
   int link_successful = 0;
   glGetProgramiv(program, GL_LINK_STATUS, &link_successful);
-  if (!link_successful) {
+  if (link_successful == 0) {
     GLsizei log_length = 0;
     const unsigned int buf_len = 1024;
     GLchar message[buf_len];
@@ -98,7 +98,7 @@ auto main() -> int {
   unsigned int vbos[1];
   glCreateBuffers(1, vbos);
 
-  const float data[3][2] = {{-0.5f, -0.5f}, {0.0f, 0.5f}, {0.5f, -0.5f}};
+  const float data[3][2] = {{-0.5F, -0.5F}, {0.0F, 0.5F}, {0.5F, -0.5F}};
 
   glDeleteVertexArrays(1, vaos);
   glDeleteVertexArrays(1, vbos);
@@ -107,11 +107,11 @@ auto main() -> int {
   glBindVertexArray(vaos[0]);
   glBindBuffer(GL_ARRAY_BUFFER, vbos[0]);
 
-  glVertexAttribPointer(0, 2, GL_FLOAT, false, 0, 0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, 0, 0, nullptr);
   glEnableVertexAttribArray(0);
 
-  while (!glfwWindowShouldClose(window)) {
-    static const float black[] = {0.0f, 0.0f, 0.0f, 0.0f};
+  while (glfwWindowShouldClose(window) == GLFW_FALSE) {
+    static const float black[] = {0.0F, 0.0F, 0.0F, 0.0F};
 
     glClearBufferfv(GL_COLOR, 0, black);
 
