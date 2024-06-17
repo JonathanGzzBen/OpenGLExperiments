@@ -122,7 +122,7 @@ auto main() -> int {
 
   const auto glew_err = glewInit();
   if (GLEW_OK != glew_err) {
-    fprintf(stderr, "Glew Error: %s\n", glewGetErrorString(glew_err));
+    printError("Glew Error: ", glewGetErrorString(glew_err), "\n");
   }
 
   unsigned int vertex_shader =
