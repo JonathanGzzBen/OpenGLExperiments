@@ -30,27 +30,8 @@ static void printError(Args... args) noexcept {
   }
 }
 
-auto OpenFile(const std::string& filename) noexcept
-    -> std::optional<std::ifstream> {
-  try {
-    std::ifstream input(filename, std::ios::binary);
-    if (!input.is_open()) {
-      return std::nullopt;
-    }
-    return std::move(input);
-  } catch (...) {
-    return std::nullopt;
-  }
-}
-
 auto ReadFile(const std::string& filename) -> std::string {
-  auto input_opt = OpenFile(filename);
-  if (!input_opt) {
-    printError("Could not open file \"", filename, "\"\n");
-    return "";
-  }
-
-  const auto input = std::move(*input_opt);
+  const std::ifstream input(filename, std::ios::binary);
   std::stringstream strBuf;
   strBuf << input.rdbuf();
   if (input.fail() && !input.eof()) {
