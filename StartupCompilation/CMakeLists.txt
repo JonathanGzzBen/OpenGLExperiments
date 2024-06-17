@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.11)
 
-project(OpenGLExperiments)
-
-
 include(FetchContent)
 
 find_package(OpenGL REQUIRED)
@@ -25,7 +22,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(glfw glew)
 
-add_executable(OpenGLExperiments opengl_experiments.cpp)
-target_compile_definitions(OpenGLExperiments PRIVATE EXPERIMENT_NAME="OpenGLExperiments")
-target_link_libraries(OpenGLExperiments glfw libglew_static)
-set_target_properties(OpenGLExperiments PROPERTIES CXX_STANDARD 20)
+add_executable(StartupCompilation opengl_experiments.cpp)
+target_compile_definitions(StartupCompilation PRIVATE EXPERIMENT_NAME="StartupCompilation")
+target_link_libraries(StartupCompilation glfw libglew_static)
+set_target_properties(StartupCompilation PROPERTIES CXX_STANDARD 20)
