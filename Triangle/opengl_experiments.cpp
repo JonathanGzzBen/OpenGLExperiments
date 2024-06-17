@@ -2,6 +2,7 @@
 #include <exception>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -20,20 +21,66 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action,
   }
 }
 
-auto GetShaderFromFile(const std::string& filename, GLenum type)
-    -> unsigned int {
-  const auto read_file = [](const std::string& filename) -> std::string {
-    auto input = std::ifstream(filename, std::ios::binary);
+template <typename... Args>
+static void printError(Args... args) noexcept {
+  try {
+    (std::cerr << ... << args);
+  } catch (const std::exception& e) {
+    std::fprintf(stderr, "printError failed: %s", e.what());
+  }
+}
+
+auto OpenFile(const std::string& filename) noexcept
+    -> std::optional<std::ifstream> {
+  try {
+    std::ifstream input(filename, std::ios::binary);
     if (!input.is_open()) {
-      throw std::runtime_error("Could not read file " + filename + "\n");
+      return std::nullopt;
     }
-    std::stringstream strBuf;
-    strBuf << input.rdbuf();
-    return strBuf.str();
-  };
+    return std::move(input);
+  } catch (...) {
+    return std::nullopt;
+  }
+}
+
+auto ReadFile(const std::string& filename) -> std::string {
+  auto input_opt = OpenFile(filename);
+  if (!input_opt) {
+    printError("Could not open file \"", filename, "\"\n");
+    return "";
+  }
+
+  const auto input = std::move(*input_opt);
+  std::stringstream strBuf;
+  strBuf << input.rdbuf();
+  if (input.fail() && !input.eof()) {
+    printError("Error reading file \"", filename, "\"\n");
+    return "";
+  }
+  return strBuf.str();
+};
+
+auto GetShaderFromFile(const std::string& filename, GLenum type) noexcept
+    -> unsigned int {
+  std::string source_code;
+  try {
+    source_code = ReadFile(filename);
+  } catch (const std::exception& ex) {
+    printError("Error reading from file \"", filename.c_str(),
+               "\": ", ex.what(), "\n");
+    return 0;
+  }
+
+  if (source_code.empty()) {
+    return 0;
+  }
+
   const auto shader = glCreateShader(type);
-  const auto source_code = read_file(filename);
-  const auto* const source_pointer = source_code.c_str();
+  if (shader == 0) {
+    return 0;
+  }
+
+  const auto* const source_pointer = source_code.data();
   glShaderSource(shader, 1, &(source_pointer), nullptr);
 
   glCompileShader(shader);
@@ -44,14 +91,14 @@ auto GetShaderFromFile(const std::string& filename, GLenum type)
     const unsigned int buf_len = 1024;
     GLchar message[buf_len];
     glGetShaderInfoLog(shader, buf_len, &log_length, message);
-    std::cerr << "Error compiling " << filename << ": " << message;
+    printError("Error compiling ", filename, ": ", message, "\n");
   }
   return shader;
 }
 
 auto main() -> int {
   if (glfwInit() != GLFW_TRUE) {
-    std::cerr << "Initialization failed\n";
+    printError("Initialization failed\n");
     std::exit(EXIT_FAILURE);
   }
 
@@ -64,7 +111,7 @@ auto main() -> int {
       glfwCreateWindow(640, 480, EXPERIMENT_NAME, nullptr, nullptr);
 
   if (window == nullptr) {
-    std::cerr << "Window creation failed\n";
+    printError("Window creation failed\n");
     std::exit(EXIT_FAILURE);
   }
 
@@ -78,10 +125,18 @@ auto main() -> int {
     fprintf(stderr, "Glew Error: %s\n", glewGetErrorString(glew_err));
   }
 
-  const auto vertex_shader =
+  unsigned int vertex_shader =
       GetShaderFromFile("shaders/vertex.glsl", GL_VERTEX_SHADER);
-  const auto fragment_shader =
+  if (vertex_shader == 0) {
+    printError("Error building VERTEX SHADER\n");
+    exit(EXIT_FAILURE);
+  }
+  unsigned int fragment_shader =
       GetShaderFromFile("shaders/fragment.glsl", GL_FRAGMENT_SHADER);
+  if (fragment_shader == 0) {
+    printError("Error building FRAGMENT SHADER\n");
+    exit(EXIT_FAILURE);
+  }
 
   const auto program = glCreateProgram();
   glAttachShader(program, vertex_shader);
@@ -94,7 +149,7 @@ auto main() -> int {
     const unsigned int buf_len = 1024;
     GLchar message[buf_len];
     glGetProgramInfoLog(program, buf_len, &log_length, message);
-    std::cerr << "Error linking program " << program << ": " << message;
+    printError("Error linking program ", program, ": ", message, "\n");
   }
   glUseProgram(program);
 

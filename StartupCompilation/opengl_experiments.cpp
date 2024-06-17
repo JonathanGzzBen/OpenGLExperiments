@@ -16,9 +16,18 @@ static void key_callback(GLFWwindow *window, int key, int scancode, int action,
   }
 }
 
+template <typename... Args>
+static void printError(Args... args) noexcept {
+  try {
+    (std::cerr << ... << args);
+  } catch (const std::exception &e) {
+    std::fprintf(stderr, "printError failed: %s", e.what());
+  }
+}
+
 auto main() -> int {
   if (glfwInit() != GLFW_TRUE) {
-    std::cerr << "Initialization failed\n";
+    printError("Initialization failed\n");
     std::exit(EXIT_FAILURE);
   }
 
@@ -31,7 +40,7 @@ auto main() -> int {
       glfwCreateWindow(640, 480, EXPERIMENT_NAME, nullptr, nullptr);
 
   if (window == nullptr) {
-    std::cerr << "Window creation failed\n";
+    printError("Window creation failed\n");
     std::exit(EXIT_FAILURE);
   }
 
