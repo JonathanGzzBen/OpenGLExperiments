@@ -160,8 +160,6 @@ auto main() -> int {
 
   const float data[3][2] = {{-0.5F, -0.5F}, {0.0F, 0.5F}, {0.5F, -0.5F}};
 
-  glDeleteVertexArrays(1, vaos);
-  glDeleteVertexArrays(1, vbos);
   glNamedBufferStorage(vbos[0], sizeof(data), data, 0);
 
   glBindVertexArray(vaos[0]);
@@ -182,6 +180,8 @@ auto main() -> int {
     glfwPollEvents();
   }
 
+  glDeleteBuffers(1, vbos);
+  glDeleteVertexArrays(1, vaos);
   glfwDestroyWindow(window);
   glfwTerminate();
   return 0;
