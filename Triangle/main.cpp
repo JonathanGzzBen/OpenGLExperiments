@@ -10,8 +10,17 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+template <typename... Args>
+static void printError(Args... args) noexcept {
+  try {
+    (std::cerr << ... << args);
+  } catch (const std::exception& e) {
+    std::fprintf(stderr, "printError failed: %s", e.what());
+  }
+}
+
 auto error_callback(int error, const char* description) {
-  std::cerr << "Error " << error << ": " << description << "\n";
+  printError("Error ", error, ": ", description, "\n");
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action,
@@ -21,14 +30,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action,
   }
 }
 
-template <typename... Args>
-static void printError(Args... args) noexcept {
-  try {
-    (std::cerr << ... << args);
-  } catch (const std::exception& e) {
-    std::fprintf(stderr, "printError failed: %s", e.what());
-  }
-}
 
 auto ReadFile(const std::string& filename) -> std::string {
   const std::ifstream input(filename, std::ios::binary);

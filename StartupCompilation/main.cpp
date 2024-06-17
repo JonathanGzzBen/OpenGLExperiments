@@ -5,23 +5,23 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-auto error_callback(int error, const char *description) {
-  std::cerr << "Error " << error << ": " << description << "\n";
-}
-
-static void key_callback(GLFWwindow *window, int key, int scancode, int action,
-                         int mods) {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-    glfwSetWindowShouldClose(window, GLFW_TRUE);
-  }
-}
-
 template <typename... Args>
 static void printError(Args... args) noexcept {
   try {
     (std::cerr << ... << args);
   } catch (const std::exception &e) {
     std::fprintf(stderr, "printError failed: %s", e.what());
+  }
+}
+
+auto error_callback(int error, const char *description) {
+  printError("Error ", error, ": ", description, "\n");
+}
+
+static void key_callback(GLFWwindow *window, int key, int scancode, int action,
+                         int mods) {
+  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+    glfwSetWindowShouldClose(window, GLFW_TRUE);
   }
 }
 
