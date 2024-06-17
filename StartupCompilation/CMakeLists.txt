@@ -22,7 +22,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(glfw glew)
 
-add_executable(StartupCompilation opengl_experiments.cpp)
+add_executable(StartupCompilation main.cpp)
 target_compile_definitions(StartupCompilation PRIVATE EXPERIMENT_NAME="StartupCompilation")
 target_link_libraries(StartupCompilation glfw libglew_static)
 set_target_properties(StartupCompilation PROPERTIES CXX_STANDARD 20)

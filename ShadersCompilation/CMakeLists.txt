@@ -22,7 +22,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(glfw glew)
 
-add_executable(ShadersCompilation opengl_experiments.cpp)
+add_executable(ShadersCompilation main.cpp)
 target_compile_definitions(ShadersCompilation PRIVATE EXPERIMENT_NAME="ShadersCompilation")
 target_link_libraries(ShadersCompilation glfw libglew_static)
 set_target_properties(ShadersCompilation PROPERTIES CXX_STANDARD 20)

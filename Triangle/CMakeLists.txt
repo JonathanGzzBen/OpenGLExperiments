@@ -22,7 +22,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(glfw glew)
 
-add_executable(Triangle opengl_experiments.cpp)
+add_executable(Triangle main.cpp)
 target_compile_definitions(Triangle PRIVATE EXPERIMENT_NAME="Triangle")
 target_link_libraries(Triangle glfw libglew_static)
 set_target_properties(Triangle PROPERTIES CXX_STANDARD 20)
