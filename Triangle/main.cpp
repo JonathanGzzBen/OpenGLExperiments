@@ -30,7 +30,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action,
   }
 }
 
-
 auto ReadFile(const std::string& filename) -> std::string {
   const std::ifstream input(filename, std::ios::binary);
   std::stringstream strBuf;
