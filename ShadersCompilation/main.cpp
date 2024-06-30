@@ -20,7 +20,7 @@ static void printError(Args... args) noexcept {
   }
 }
 
-auto error_callback(int error, const char *description) {
+auto glfw_error_callback(int error, const char *description) {
   printError("Error ", error, ": ", description, "\n");
 }
 
@@ -84,7 +84,7 @@ auto main() -> int {
     std::exit(EXIT_FAILURE);
   }
 
-  glfwSetErrorCallback(error_callback);
+  glfwSetErrorCallback(glfw_error_callback);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);

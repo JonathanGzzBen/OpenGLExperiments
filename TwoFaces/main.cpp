@@ -6,18 +6,18 @@
 #include <sstream>
 #include <string>
 
-#include "glm/ext/matrix_transform.hpp"
-
 #define GLFW_INCLUDE_NONE
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include <glm/ext.hpp>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "gl_strings/gl_strings.h"
+
 #define STB_IMAGE_IMPLEMENTATION
+
 #include "stb_image.h"
 
 template <typename... Args>
@@ -29,7 +29,19 @@ static void printError(Args... args) noexcept {
   }
 }
 
-auto error_callback(int error, const char* description) {
+// OpenGL Debug Message Callback
+void GLAPIENTRY opengl_message_callback(GLenum source, GLenum type,
+                                        GLuint message_id, GLenum severity,
+                                        GLsizei length, const GLchar* message,
+                                        const void* user_param) {
+  printError("(OpenGL Debug Message Callback) id: ", message_id,
+             " type: ", gl_strings::type(type),
+             " severity: ", gl_strings::severity(severity),
+             " source: ", gl_strings::source(source), " message: ", message,
+             "\n");
+}
+
+auto glfw_error_callback(int error, const char* description) {
   printError("Error ", error, ": ", description, "\n");
 }
 
@@ -93,7 +105,7 @@ auto main() -> int {
     std::exit(EXIT_FAILURE);
   }
 
-  glfwSetErrorCallback(error_callback);
+  glfwSetErrorCallback(glfw_error_callback);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -115,6 +127,10 @@ auto main() -> int {
   if (GLEW_OK != glew_err) {
     printError("Glew Error: ", glewGetErrorString(glew_err), "\n");
   }
+
+  // Set OpenGL Debug Message Callback
+  glEnable(GL_DEBUG_OUTPUT);
+  glDebugMessageCallback(opengl_message_callback, nullptr);
 
   unsigned int vertex_shader =
       GetShaderFromFile("shaders/vertex.glsl", GL_VERTEX_SHADER);
@@ -250,7 +266,7 @@ auto main() -> int {
 
     // Calculate Time
     auto now_time = glfwGetTime();
-    auto delta_time =  now_time - last_time;
+    auto delta_time = now_time - last_time;
     last_time = now_time;
 
     // Calculations with Time

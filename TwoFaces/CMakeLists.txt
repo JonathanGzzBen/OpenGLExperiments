@@ -28,10 +28,11 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(glfw glew glm)
 
-add_executable(TwoFaces main.cpp)
+add_executable(TwoFaces main.cpp ${CMAKE_SOURCE_DIR}/libs/gl_strings/gl_strings.cpp)
 target_compile_definitions(TwoFaces PRIVATE EXPERIMENT_NAME="TwoFaces")
 target_link_libraries(TwoFaces glfw libglew_static glm::glm)
 set_target_properties(TwoFaces PROPERTIES CXX_STANDARD 20)
+target_include_directories(TwoFaces PRIVATE ${CMAKE_SOURCE_DIR}/libs)
 
 if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
   set_target_properties(TwoFaces
