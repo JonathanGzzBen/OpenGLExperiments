@@ -32,3 +32,9 @@ add_executable(TwoFaces main.cpp)
 target_compile_definitions(TwoFaces PRIVATE EXPERIMENT_NAME="TwoFaces")
 target_link_libraries(TwoFaces glfw libglew_static glm::glm)
 set_target_properties(TwoFaces PROPERTIES CXX_STANDARD 20)
+
+if(WIN32 AND CMAKE_BUILD_TYPE STREQUAL "Release")
+  set_target_properties(TwoFaces
+    PROPERTIES WIN32_EXECUTABLE YES
+    LINK_FLAGS "/ENTRY:mainCRTStartup")
+endif()
