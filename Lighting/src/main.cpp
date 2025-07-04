@@ -66,30 +66,37 @@ auto main() -> int {
   }
 
   using Vertex = struct Vertex {
-    float x, y, z;
-    // float x, y, z, nx, ny, nz, u, v;
+    float x, y, z, u, v, nx, ny, nz;
   };
 
   std::vector<Vertex> vertices = {
-      {.x = -0.5F, .y = -0.5F, .z = 0.0F},
-      {.x = -0.5F, .y = 0.5F, .z = 0.0F},
-      {.x = 0.5F, .y = 0.5F, .z = 0.0F},
+      {.x = -0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+       .ny = 0.0F, .nz = 0.0F},
+      {.x = -0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+       .ny = 0.0F, .nz = 0.0F},
+      {.x = 0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+       .ny = 0.0F, .nz = 0.0F},
+      {.x = -0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+       .ny = 0.0F, .nz = 0.0F},
+      {.x = 0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+       .ny = 0.0F, .nz = 0.0F},
+      {.x = 0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+       .ny = 0.0F, .nz = 0.0F},
   };
-  //   std::vector<Vertex> vertices = {
-  //     {.x = -0.5F, .y = -0.5F, .z = 0.0F, .nx = 0.0F, .ny = 0.0F, .nz = 0.0F,
-  //      .u = 0.0F, .v = 0.0F},
-  //     {.x = -0.5F, .y = 0.5F, .z = 0.0F, .nx = 0.0F, .ny = 0.0F, .nz = 0.0F,
-  //      .u = 0.0F, .v = 0.0F},
-  //     {.x = 0.5F, .y = 0.5F, .z = 0.0F, .nx = 0.0F, .ny = 0.0F, .nz = 0.0F,
-  //      .u = 0.0F, .v = 0.0F},
-  // };
 
   unsigned int vao;
   glCreateVertexArrays(1, &vao);
   glEnableVertexArrayAttrib(vao, 0);
+  glEnableVertexArrayAttrib(vao, 1);
+  glEnableVertexArrayAttrib(vao, 2);
 
   glVertexArrayAttribBinding(vao, 0, 0);
+  glVertexArrayAttribBinding(vao, 1, 0);
+  glVertexArrayAttribBinding(vao, 2, 0);
   glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, x));
+  glVertexArrayAttribFormat(vao, 1, 2, GL_FLOAT, GL_FALSE, offsetof(Vertex, u));
+  glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE,
+                            offsetof(Vertex, nx));
 
   unsigned int vbo;
   glCreateBuffers(1, &vbo);
@@ -105,7 +112,7 @@ auto main() -> int {
 
     glBindVertexArray(vao);
     glVertexArrayVertexBuffer(vao, 0, vbo, 0, sizeof(Vertex));
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
