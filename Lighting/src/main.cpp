@@ -10,17 +10,17 @@ void APIENTRY glDebugCallback(GLenum source, GLenum type, GLuint id,
                               GLenum severity, GLsizei length,
                               const GLchar* message, const void* userParam) {
   if (severity != GL_DEBUG_SEVERITY_NOTIFICATION) {
-    std::cerr << "OpenGL debug: " << message << std::endl;
+    std::cerr << "OpenGL debug: " << message << "\n";
   }
 }
 
 void glfwErrorCallback(const int error, const char* description) {
-  std::cerr << "GLFW error: " << description << std::endl;
+  std::cerr << "GLFW error: " << description << "\n";
 }
 
 auto main() -> int {
   if (glfwInit() != GLFW_TRUE) {
-    std::cerr << "Failed to initialize!" << std::endl;
+    std::cerr << "Failed to initialize!\n";
     return 1;
   }
 
@@ -33,7 +33,7 @@ auto main() -> int {
 
   GLFWwindow* window = glfwCreateWindow(800, 600, "Lighting", nullptr, nullptr);
   if (window == nullptr) {
-    std::cerr << "Failed to create GLFW window!" << std::endl;
+    std::cerr << "Failed to create GLFW window!\n";
     glfwTerminate();
     return 1;
   }
@@ -41,13 +41,13 @@ auto main() -> int {
   glfwMakeContextCurrent(window);
 
   if (glewInit() != GLEW_OK) {
-    std::cerr << "Failed to initialize GLEW!" << std::endl;
+    std::cerr << "Failed to initialize GLEW!\n";
     return 1;
   }
 
   int flags;
   glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
-  if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
+  if ((flags & GL_CONTEXT_FLAG_DEBUG_BIT) != 0) {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(glDebugCallback, nullptr);
@@ -59,7 +59,8 @@ auto main() -> int {
       "shaders/vertex.glsl", "shaders/fragment.glsl");
   if (!program) {
     std::cerr << "Failed to initialize program: " << program.error().message <<
-        std::endl;
+        "\n";
+
     glfwTerminate();
     return 1;
   }
@@ -92,8 +93,10 @@ auto main() -> int {
 
   unsigned int vbo;
   glCreateBuffers(1, &vbo);
-  glNamedBufferStorage(vbo, vertices.size() * sizeof(Vertex), vertices.data(),
-                       0);
+  glNamedBufferStorage(
+      vbo, static_cast<GLsizei>(vertices.size() * sizeof(Vertex)),
+      vertices.data(),
+      0);
 
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
