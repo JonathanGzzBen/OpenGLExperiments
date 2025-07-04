@@ -76,10 +76,6 @@ auto main() -> int {
        .ny = 0.0F, .nz = 0.0F},
       {.x = 0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
        .ny = 0.0F, .nz = 0.0F},
-      {.x = -0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
-       .ny = 0.0F, .nz = 0.0F},
-      {.x = 0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
-       .ny = 0.0F, .nz = 0.0F},
       {.x = 0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
        .ny = 0.0F, .nz = 0.0F},
   };
@@ -105,6 +101,13 @@ auto main() -> int {
       vertices.data(),
       0);
 
+  unsigned int ebo;
+  glCreateBuffers(1, &ebo);
+  std::vector<unsigned int> indices = {0, 1, 2, 2, 3, 0};
+  glNamedBufferStorage(
+      ebo, static_cast<GLsizei>(indices.size() * sizeof(unsigned int)),
+      indices.data(), 0);
+
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
     glClear(GL_COLOR_BUFFER_BIT);
@@ -112,7 +115,8 @@ auto main() -> int {
 
     glBindVertexArray(vao);
     glVertexArrayVertexBuffer(vao, 0, vbo, 0, sizeof(Vertex));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
