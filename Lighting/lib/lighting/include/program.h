@@ -8,7 +8,6 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include  <tl/expected.hpp>
 #include  "error.h"
 
 #include  "gl/gl.h"
@@ -18,90 +17,31 @@ class Program {
 private:
   unsigned int program_id_;
 
-  Program(unsigned int program_id) : program_id_(program_id) {
-  }
+  explicit Program(unsigned int program_id);
 
   static auto read_file(
-      const std::string& filename) -> std::expected<std::string, Error> {
-    std::ifstream input_stream(filename);
-    std::stringstream file_contents_stream;
-
-    if (!input_stream.is_open() || input_stream.fail()) {
-      return std::unexpected(
-          Error{.message = std::format("Could not open file '{}'", filename)});
-    }
-    file_contents_stream << input_stream.rdbuf();
-    return {file_contents_stream.str()};
-  }
+      const std::string& filename) -> std::expected<std::string, Error>;
 
   static auto compile_shader(const GLenum type,
                              const std::string& filename) -> std::expected<
-    GLuint, Error> {
-    const auto source = read_file(filename);
-    if (!source) {
-      return std::unexpected(with_context(source.error(),
-                                          std::format(
-                                              "Error getting source for vertex type {}",
-                                              type)));
-    }
-
-    const auto shader = glCreateShader(type);
-    const auto source_ptr = source->c_str();
-    glShaderSource(shader, 1, &source_ptr,
-                   nullptr);
-
-    glCompileShader(shader);
-    auto shader_compile_status = GL_FALSE;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &shader_compile_status);
-    if (shader_compile_status != GL_TRUE) {
-      char message[1024] = {0};
-      GLsizei message_len = 0;
-      glGetShaderInfoLog(shader, sizeof(message), &message_len, message);
-      return std::unexpected(
-          Error{.message =
-              std::format("Could not compile shader type {}: {}", type,
-                          message)});
-    }
-    return shader;
-  }
+    GLuint, Error>;
 
 public:
-  ~Program() = default;
 
-  auto Use() const -> void {
-    glUseProgram(program_id_);
-  }
+  // Delete copy constructors
+  Program(const Program&) = delete;
+  auto operator=(const Program&) -> Program& = delete;
+
+  // Take ownership of the program_id
+  Program(Program&& other) noexcept;
+
+  ~Program();
+
+  auto Use() const -> void;
 
   static auto Create(const std::string& vertex_shader_filename,
                      const std::string& fragment_shader_filename) ->
-    std::expected<Program, Error> {
-    const auto vertex_shader = compile_shader(
-        GL_VERTEX_SHADER, vertex_shader_filename);
-    if (!vertex_shader) {
-      return std::unexpected(with_context(vertex_shader.error(),
-                                          "Could not compile vertex shader"));
-    }
-    const auto fragment_shader = compile_shader(
-        GL_FRAGMENT_SHADER, fragment_shader_filename);
-    if (!fragment_shader) {
-      return std::unexpected(with_context(fragment_shader.error(),
-                                          "Could not compile fragment shader"));
-    }
-
-    const auto program_id = glCreateProgram();
-    glAttachShader(program_id, *vertex_shader);
-    glAttachShader(program_id, *fragment_shader);
-    glLinkProgram(program_id);
-    auto program_link_status = GL_FALSE;
-    glGetProgramiv(program_id, GL_LINK_STATUS, &program_link_status);
-    if (program_link_status != GL_TRUE) {
-      return std::unexpected(Error{
-          .message = std::format("Could not link program status: {}",
-                                 program_link_status)});
-    }
-
-    return Program{program_id};
-  }
+    std::expected<Program, Error>;
 };
 } // namespace lighting
 

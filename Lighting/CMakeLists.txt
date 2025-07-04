@@ -92,10 +92,11 @@ else ()
 endif ()
 
 set(lighting_lib "${PROJECT_NAME}_lib")
-add_library(${lighting_lib} INTERFACE)
-target_include_directories(${lighting_lib} INTERFACE
+add_library(${lighting_lib} STATIC
+        lib/lighting/src/program.cpp)
+target_include_directories(${lighting_lib} PUBLIC
         ${CMAKE_SOURCE_DIR}/lib/lighting/include)
-target_link_libraries(${lighting_lib} INTERFACE GLEW::GLEW)
+target_link_libraries(${lighting_lib} PUBLIC GLEW::GLEW)
 set_target_properties(${lighting_lib} PROPERTIES CXX_STANDARD 23)
 set_target_properties(${lighting_lib} PROPERTIES CXX_STANDARD_REQUIRED ON)
 
