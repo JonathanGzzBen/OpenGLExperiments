@@ -93,7 +93,8 @@ endif ()
 
 set(lighting_lib "${PROJECT_NAME}_lib")
 add_library(${lighting_lib} STATIC
-        lib/lighting/src/program.cpp)
+        lib/lighting/src/program.cpp
+        lib/lighting/src/mesh.cpp)
 target_include_directories(${lighting_lib} PUBLIC
         ${CMAKE_SOURCE_DIR}/lib/lighting/include)
 target_link_libraries(${lighting_lib} PUBLIC GLEW::GLEW)

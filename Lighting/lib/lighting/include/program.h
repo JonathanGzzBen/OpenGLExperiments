@@ -15,7 +15,7 @@
 namespace lighting {
 class Program {
 private:
-  unsigned int program_id_;
+  unsigned int program_id_ = 0;
 
   explicit Program(unsigned int program_id);
 

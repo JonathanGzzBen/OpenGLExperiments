@@ -5,6 +5,7 @@
 #include <glm/ext/matrix_common.hpp>
 #include <vector>
 #include "program.h"
+#include "mesh.h"
 
 void APIENTRY glDebugCallback(GLenum source, GLenum type, GLuint id,
                               GLenum severity, GLsizei length,
@@ -65,21 +66,6 @@ auto main() -> int {
     return 1;
   }
 
-  using Vertex = struct Vertex {
-    float x, y, z, u, v, nx, ny, nz;
-  };
-
-  std::vector<Vertex> vertices = {
-      {.x = -0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
-       .ny = 0.0F, .nz = 0.0F},
-      {.x = -0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
-       .ny = 0.0F, .nz = 0.0F},
-      {.x = 0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
-       .ny = 0.0F, .nz = 0.0F},
-      {.x = 0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
-       .ny = 0.0F, .nz = 0.0F},
-  };
-
   unsigned int vao;
   glCreateVertexArrays(1, &vao);
   glEnableVertexArrayAttrib(vao, 0);
@@ -89,34 +75,38 @@ auto main() -> int {
   glVertexArrayAttribBinding(vao, 0, 0);
   glVertexArrayAttribBinding(vao, 1, 0);
   glVertexArrayAttribBinding(vao, 2, 0);
-  glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex, x));
-  glVertexArrayAttribFormat(vao, 1, 2, GL_FLOAT, GL_FALSE, offsetof(Vertex, u));
+  glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE,
+                            offsetof(lighting::Vertex, x));
+  glVertexArrayAttribFormat(vao, 1, 2, GL_FLOAT, GL_FALSE,
+                            offsetof(lighting::Vertex, u));
   glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE,
-                            offsetof(Vertex, nx));
+                            offsetof(lighting::Vertex, nx));
 
-  unsigned int vbo;
-  glCreateBuffers(1, &vbo);
-  glNamedBufferStorage(
-      vbo, static_cast<GLsizei>(vertices.size() * sizeof(Vertex)),
-      vertices.data(),
-      0);
-
-  unsigned int ebo;
-  glCreateBuffers(1, &ebo);
+  std::vector<lighting::Vertex> vertices = {
+      {.x = -0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+       .ny = 0.0F, .nz = 0.0F},
+      {.x = -0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+       .ny = 0.0F, .nz = 0.0F},
+      {.x = 0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+       .ny = 0.0F, .nz = 0.0F},
+      {.x = 0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+       .ny = 0.0F, .nz = 0.0F},
+  };
   std::vector<unsigned int> indices = {0, 1, 2, 2, 3, 0};
-  glNamedBufferStorage(
-      ebo, static_cast<GLsizei>(indices.size() * sizeof(unsigned int)),
-      indices.data(), 0);
+
+  const auto mesh = lighting::Mesh::Create(vertices, indices);
+  if (!mesh) {
+    std::cerr << "Failed to initialize mesh: " << mesh.error().message << "\n";
+    glfwTerminate();
+    return 1;
+  }
 
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
     glClear(GL_COLOR_BUFFER_BIT);
     program->Use();
 
-    glBindVertexArray(vao);
-    glVertexArrayVertexBuffer(vao, 0, vbo, 0, sizeof(Vertex));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    mesh->Draw(vao, 0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
