@@ -5,9 +5,9 @@
 
 #include <expected>
 #include <format>
-#include <fstream>
 #include <string>
-#include <sstream>
+#include <glm/ext/matrix_float4x4.hpp>
+
 #include  "error.h"
 
 #include  "gl/gl.h"
@@ -27,7 +27,6 @@ private:
     GLuint, Error>;
 
 public:
-
   // Delete copy constructors
   Program(const Program&) = delete;
   auto operator=(const Program&) -> Program& = delete;
@@ -37,11 +36,16 @@ public:
 
   ~Program();
 
-  auto Use() const -> void;
-
   static auto Create(const std::string& vertex_shader_filename,
                      const std::string& fragment_shader_filename) ->
     std::expected<Program, Error>;
+
+  auto Use() const -> void;
+
+  [[nodiscard]] auto SetUniformMatrix(const std::string& uniform_name,
+                                      const glm::mat4& matrix) const ->
+    std::expected<
+      void, Error>;
 };
 } // namespace lighting
 

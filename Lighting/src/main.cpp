@@ -2,12 +2,12 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <glm/ext/matrix_common.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 #include "program.h"
 #include "mesh.h"
 
-void APIENTRY glDebugCallback(GLenum source, GLenum type, GLuint id,
+void APIENTRY glDebugCallback(GLenum source, GLenum type, GLuint error_id,
                               GLenum severity, GLsizei length,
                               const GLchar* message, const void* userParam) {
   if (severity != GL_DEBUG_SEVERITY_NOTIFICATION) {
@@ -101,8 +101,58 @@ auto main() -> int {
     return 1;
   }
 
+  using WindowStatus = struct WindowStatus {
+    float aspect_ratio;
+  };
+
+  WindowStatus window_status = [&window]() {
+    int window_width;
+    int window_height;
+    glfwGetWindowSize(window, &window_width, &window_height);
+    return WindowStatus{
+        .aspect_ratio = static_cast<float>(window_width) / static_cast<float>(
+                          window_height)
+    };
+  }();
+  glfwSetWindowUserPointer(window, &window_status);
+
+  const auto window_size_callback = [](GLFWwindow* window, int width,
+                                       int height) {
+    auto* const window_status = static_cast<WindowStatus*>(
+      glfwGetWindowUserPointer(window));
+    if (!window_status || window_status->aspect_ratio == 0) {
+      return;
+    }
+    window_status->aspect_ratio =
+        static_cast<float>(width) / static_cast<float>(height);
+    glViewport(0, 0, width, height);
+  };
+  glfwSetWindowSizeCallback(window, window_size_callback);
+
+  constexpr auto view_matrix = glm::translate(glm::mat4(1),
+                                              glm::vec3(0.0F, 0.0F, -5.0F));
+
+  if (const auto set_m_view_result = program->SetUniformMatrix(
+      "mView", view_matrix); !set_m_view_result) {
+    std::cerr << "Failed to set uniform: " << set_m_view_result.error().message
+        << "\n";
+    glfwTerminate();
+    return 1;
+  }
+
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
+    const auto projection_matrix = glm::perspective(
+        glm::radians(45.0F), window_status.aspect_ratio, 0.1F, 100.0F);
+    if (const auto set_m_projection_result = program->SetUniformMatrix(
+        "mProjection", projection_matrix); !set_m_projection_result) {
+      std::cerr << "Failed to set uniform: " << set_m_projection_result.error().
+          message
+          << "\n";
+      glfwTerminate();
+      return 1;
+    }
+
     glClear(GL_COLOR_BUFFER_BIT);
     program->Use();
 

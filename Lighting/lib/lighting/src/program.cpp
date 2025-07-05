@@ -56,10 +56,6 @@ Program::~Program() {
   glDeleteProgram(program_id_);
 }
 
-auto Program::Use() const -> void {
-  glUseProgram(program_id_);
-}
-
 auto Program::Create(const std::string& vertex_shader_filename,
                      const std::string& fragment_shader_filename) ->
   std::expected<Program, Error> {
@@ -89,5 +85,25 @@ auto Program::Create(const std::string& vertex_shader_filename,
   }
 
   return Program{program_id};
+}
+
+auto Program::Use() const -> void {
+  glUseProgram(program_id_);
+}
+
+auto Program::SetUniformMatrix(const std::string& uniform_name,
+                               const glm::mat4& matrix) const -> std::expected<
+  void, Error> {
+  glUseProgram(program_id_);
+  const auto location = glGetUniformLocation(program_id_, uniform_name.c_str());
+  if (location == -1) {
+    return std::unexpected(Error{
+        .message = std::format("Could not get uniform location of '{}'",
+                               uniform_name)});
+  }
+
+  glUniformMatrix4fv(location, 1, GL_FALSE, &matrix[0][0]);
+  glUseProgram(0);
+  return {};
 }
 } // namespace lighting
