@@ -82,19 +82,21 @@ auto main() -> int {
   glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE,
                             offsetof(lighting::Vertex, nx));
 
-  std::vector<lighting::Vertex> vertices = {
-      {.x = -0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
-       .ny = 0.0F, .nz = 0.0F},
-      {.x = -0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
-       .ny = 0.0F, .nz = 0.0F},
-      {.x = 0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
-       .ny = 0.0F, .nz = 0.0F},
-      {.x = 0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
-       .ny = 0.0F, .nz = 0.0F},
-  };
-  std::vector<unsigned int> indices = {0, 1, 2, 2, 3, 0};
+  const auto mesh = []() {
+    std::vector<lighting::Vertex> vertices = {
+        {.x = -0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+         .ny = 0.0F, .nz = 0.0F},
+        {.x = -0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+         .ny = 0.0F, .nz = 0.0F},
+        {.x = 0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+         .ny = 0.0F, .nz = 0.0F},
+        {.x = 0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+         .ny = 0.0F, .nz = 0.0F},
+    };
+    const std::vector<unsigned int> indices = {0, 1, 2, 2, 3, 0};
+    return lighting::Mesh::Create(vertices, indices);
+  }();
 
-  const auto mesh = lighting::Mesh::Create(vertices, indices);
   if (!mesh) {
     std::cerr << "Failed to initialize mesh: " << mesh.error().message << "\n";
     glfwTerminate();
@@ -118,12 +120,12 @@ auto main() -> int {
 
   const auto window_size_callback = [](GLFWwindow* window, int width,
                                        int height) {
-    auto* const window_status = static_cast<WindowStatus*>(
+    auto* const window_status_ptr = static_cast<WindowStatus*>(
       glfwGetWindowUserPointer(window));
-    if (!window_status || window_status->aspect_ratio == 0) {
+    if (!window_status_ptr || window_status_ptr->aspect_ratio == 0) {
       return;
     }
-    window_status->aspect_ratio =
+    window_status_ptr->aspect_ratio =
         static_cast<float>(width) / static_cast<float>(height);
     glViewport(0, 0, width, height);
   };
@@ -140,7 +142,19 @@ auto main() -> int {
     return 1;
   }
 
+  const auto get_delta = []() {
+    double current_time = glfwGetTime();
+    static double last_time = current_time;
+    double delta_time = current_time - last_time;
+    last_time = current_time;
+    return delta_time;
+  };
+
+  const auto rotation_speed = 90.0F; // Speed in degrees per second
+  double rotation = rotation_speed * get_delta();
+
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
+  // Rendering loop
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
     const auto projection_matrix = glm::perspective(
         glm::radians(45.0F), window_status.aspect_ratio, 0.1F, 100.0F);
@@ -149,6 +163,19 @@ auto main() -> int {
       std::cerr << "Failed to set uniform: " << set_m_projection_result.error().
           message
           << "\n";
+      glfwTerminate();
+      return 1;
+    }
+
+    rotation += rotation_speed * get_delta();
+    const auto model_matrix = glm::rotate(glm::mat4(1.0F),
+                                          glm::radians(
+                                              static_cast<float>(rotation)),
+                                          glm::vec3(0.0F, 1.0F, 0.0F));
+    if (const auto set_m_model_result = program->SetUniformMatrix(
+        "mModel", model_matrix); !set_m_model_result) {
+      std::cerr << "Failed to set uniform: " << set_m_model_result.error().
+          message << "\n";
       glfwTerminate();
       return 1;
     }
