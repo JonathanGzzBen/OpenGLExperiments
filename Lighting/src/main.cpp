@@ -174,14 +174,10 @@ auto main() -> int {
   glfwSetWindowSizeCallback(window, window_size_callback);
 
   const auto view_matrix = []() {
-    auto new_view_matrix = glm::mat4(1.0F);
-    new_view_matrix = glm::translate(new_view_matrix,
-                                     glm::vec3(-0.2F, 0.5F, -4.0F));
-    new_view_matrix = glm::rotate(new_view_matrix, glm::radians(15.0F),
-                                  glm::vec3(1.0F, 0.0F, 0.0F));
-    new_view_matrix = glm::rotate(new_view_matrix, glm::radians(45.0F),
-                                  glm::vec3(0.0F, 1.0F, 0.0F));
-    return new_view_matrix;
+    auto lookat_matrix = glm::lookAt(glm::vec3(3.0F, 0.0F, 3.0F),
+                                     glm::vec3(0.0F, 0.0F, 0.0F),
+                                     glm::vec3(0.0F, 1.0F, 0.0F));
+    return lookat_matrix;
   }();
 
   if (const auto set_m_view_result = program->SetUniformMatrix(
@@ -262,7 +258,7 @@ auto main() -> int {
           message << "\n";
       glfwTerminate();
       return 1;
-        }
+    }
     cube_mesh->Draw(*program, vao, 0);
     glUseProgram(0);
 
