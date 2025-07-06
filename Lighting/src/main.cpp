@@ -82,7 +82,7 @@ auto main() -> int {
   glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE,
                             offsetof(lighting::Vertex, nx));
 
-  const auto mesh = []() {
+  const auto cube_mesh = []() {
     std::vector<lighting::Vertex> vertices = {
         // Front face
         {.x = -0.5F, .y = -0.5F, .z = 0.5F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
@@ -121,11 +121,29 @@ auto main() -> int {
     return lighting::Mesh::Create(vertices, indices);
   }();
 
-  if (!mesh) {
-    std::cerr << "Failed to initialize mesh: " << mesh.error().message << "\n";
+  if (!cube_mesh) {
+    std::cerr << "Failed to initialize mesh: " << cube_mesh.error().message <<
+        "\n";
     glfwTerminate();
     return 1;
   }
+
+  const auto plane_mesh = []() {
+    const std::vector<lighting::Vertex> vertices = {
+        {.x = -1.0F, .y = -1.0F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+         .ny = 0.0F, .nz = 0.0F},
+        {.x = -1.0F, .y = 1.0F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+         .ny = 0.0F, .nz = 0.0F},
+        {.x = 1.0F, .y = 1.0F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+         .ny = 0.0F, .nz = 0.0F},
+        {.x = 1.0F, .y = -1.0F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+         .ny = 0.0F, .nz = 0.0F},
+    };
+    const std::vector<unsigned int> indices = {
+        0, 1, 2, 2, 3, 0,
+    };
+    return lighting::Mesh::Create(vertices, indices);
+  }();
 
   using WindowStatus = struct WindowStatus {
     float aspect_ratio;
@@ -155,8 +173,16 @@ auto main() -> int {
   };
   glfwSetWindowSizeCallback(window, window_size_callback);
 
-  constexpr auto view_matrix = glm::translate(glm::mat4(1),
-                                              glm::vec3(0.0F, 0.0F, -5.0F));
+  const auto view_matrix = []() {
+    auto new_view_matrix = glm::mat4(1.0F);
+    new_view_matrix = glm::translate(new_view_matrix,
+                                     glm::vec3(-0.2F, 0.5F, -5.0F));
+    new_view_matrix = glm::rotate(new_view_matrix, glm::radians(45.0F),
+                                  glm::vec3(1.0F, 0.0F, 0.0F));
+    new_view_matrix = glm::rotate(new_view_matrix, glm::radians(45.0F),
+                                  glm::vec3(0.0F, 1.0F, 0.0F));
+    return new_view_matrix;
+  }();
 
   if (const auto set_m_view_result = program->SetUniformMatrix(
       "mView", view_matrix); !set_m_view_result) {
@@ -180,6 +206,7 @@ auto main() -> int {
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
   // Rendering loop
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
+    program->Use();
     const auto projection_matrix = glm::perspective(
         glm::radians(45.0F), window_status.aspect_ratio, 0.1F, 100.0F);
     if (const auto set_m_projection_result = program->SetUniformMatrix(
@@ -191,23 +218,37 @@ auto main() -> int {
       return 1;
     }
 
-    rotation += rotation_speed * get_delta();
-    const auto model_matrix = glm::rotate(glm::mat4(1.0F),
-                                          glm::radians(
-                                              static_cast<float>(rotation)),
-                                          glm::vec3(1.0F, 1.0F, 0.0F));
+    glClear(GL_COLOR_BUFFER_BIT);
+    program->Use();
+    auto plane_model_matrix = glm::mat4(1.0F);
+    plane_model_matrix = glm::translate(plane_model_matrix,
+                                        glm::vec3(0.0F, -1.0F, 0.0F));
+    plane_model_matrix = glm::rotate(plane_model_matrix,
+                                     glm::radians(90.0F),
+                                     glm::vec3(1.0F, 0.0F, 0.0F));
     if (const auto set_m_model_result = program->SetUniformMatrix(
-        "mModel", model_matrix); !set_m_model_result) {
+        "mModel", plane_model_matrix); !set_m_model_result) {
       std::cerr << "Failed to set uniform: " << set_m_model_result.error().
           message << "\n";
       glfwTerminate();
       return 1;
     }
+    plane_mesh->Draw(*program, vao, 0);
 
-    glClear(GL_COLOR_BUFFER_BIT);
-    program->Use();
-
-    mesh->Draw(vao, 0);
+    rotation += rotation_speed * get_delta();
+    auto cube_model_matrix = glm::rotate(glm::mat4(1.0F),
+                                         glm::radians(
+                                             static_cast<float>(
+                                               rotation)),
+                                         glm::vec3(1.0F, 1.0F, 0.0F));
+    if (const auto set_m_model_result = program->SetUniformMatrix(
+        "mModel", cube_model_matrix); !set_m_model_result) {
+      std::cerr << "Failed to set uniform: " << set_m_model_result.error().
+          message << "\n";
+      glfwTerminate();
+      return 1;
+    }
+    cube_mesh->Draw(*program, vao, 0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

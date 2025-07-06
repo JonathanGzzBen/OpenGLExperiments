@@ -7,6 +7,7 @@
 #include  <expected>
 
 #include "error.h"
+#include "program.h"
 
 namespace lighting {
 using Vertex = struct Vertex {
@@ -37,8 +38,10 @@ public:
                      const std::vector<unsigned int>& indices) -> std::expected<
     Mesh, Error>;
 
-  auto Draw(const unsigned int vao,
-            const unsigned int binding_index) const -> void;
+  auto Draw(
+      const Program& program,
+      const unsigned int vao,
+      const unsigned int binding_index) const -> void;
 };
 } // namespace lighting
 

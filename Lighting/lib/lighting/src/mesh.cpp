@@ -1,8 +1,9 @@
 #include  "mesh.h"
 
 lighting::Mesh::Mesh(const unsigned int vbo, const unsigned int ebo,
-    const size_t indices_count): vbo(vbo),
-                                 ebo(ebo), indices_count(indices_count) {
+                     const size_t indices_count): vbo(vbo),
+                                                  ebo(ebo),
+                                                  indices_count(indices_count) {
 }
 
 lighting::Mesh::Mesh(Mesh&& other) noexcept {
@@ -21,7 +22,8 @@ lighting::Mesh::~Mesh() {
 }
 
 auto lighting::Mesh::Create(const std::vector<Vertex>& vertices,
-    const std::vector<unsigned int>& indices) -> std::expected<Mesh, Error> {
+                            const std::vector<unsigned int>& indices) ->
+  std::expected<Mesh, Error> {
   unsigned int vbo;
   glCreateBuffers(1, &vbo);
   glNamedBufferStorage(
@@ -38,8 +40,9 @@ auto lighting::Mesh::Create(const std::vector<Vertex>& vertices,
   return {Mesh(vbo, ebo, indices.size())};
 }
 
-auto lighting::Mesh::Draw(const unsigned int vao,
-    const unsigned int binding_index) const -> void {
+auto lighting::Mesh::Draw(const Program& program, const unsigned int vao,
+                          const unsigned int binding_index) const -> void {
+  program.Use();
   glBindVertexArray(vao);
   glVertexArrayVertexBuffer(vao, binding_index, vbo, 0, sizeof(Vertex));
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
