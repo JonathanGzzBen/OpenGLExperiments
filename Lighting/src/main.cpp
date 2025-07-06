@@ -84,16 +84,40 @@ auto main() -> int {
 
   const auto mesh = []() {
     std::vector<lighting::Vertex> vertices = {
-        {.x = -0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+        // Front face
+        {.x = -0.5F, .y = -0.5F, .z = 0.5F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
          .ny = 0.0F, .nz = 0.0F},
-        {.x = -0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+        {.x = -0.5F, .y = 0.5F, .z = 0.5F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
          .ny = 0.0F, .nz = 0.0F},
-        {.x = 0.5F, .y = 0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+        {.x = 0.5F, .y = 0.5F, .z = 0.5F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
          .ny = 0.0F, .nz = 0.0F},
-        {.x = 0.5F, .y = -0.5F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+        {.x = 0.5F, .y = -0.5F, .z = 0.5F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+         .ny = 0.0F, .nz = 0.0F},
+
+        // Back face
+        {.x = -0.5F, .y = -0.5F, .z = -0.5F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+         .ny = 0.0F, .nz = 0.0F},
+        {.x = -0.5F, .y = 0.5F, .z = -0.5F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+         .ny = 0.0F, .nz = 0.0F},
+        {.x = 0.5F, .y = 0.5F, .z = -0.5F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
+         .ny = 0.0F, .nz = 0.0F},
+        {.x = 0.5F, .y = -0.5F, .z = -0.5F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
          .ny = 0.0F, .nz = 0.0F},
     };
-    const std::vector<unsigned int> indices = {0, 1, 2, 2, 3, 0};
+    const std::vector<unsigned int> indices = {
+        // Front face
+        0, 1, 2, 2, 3, 0,
+        // Back face
+        4, 5, 6, 6, 7, 4,
+        // Left face
+        4, 5, 1, 1, 0, 4,
+        // Right face
+        3, 2, 6, 6, 7, 3,
+        // Upper face
+        1, 5, 6, 6, 2, 1,
+        // Lower face
+        4, 0, 3, 3, 7, 4,
+    };
     return lighting::Mesh::Create(vertices, indices);
   }();
 
@@ -171,7 +195,7 @@ auto main() -> int {
     const auto model_matrix = glm::rotate(glm::mat4(1.0F),
                                           glm::radians(
                                               static_cast<float>(rotation)),
-                                          glm::vec3(0.0F, 1.0F, 0.0F));
+                                          glm::vec3(1.0F, 1.0F, 0.0F));
     if (const auto set_m_model_result = program->SetUniformMatrix(
         "mModel", model_matrix); !set_m_model_result) {
       std::cerr << "Failed to set uniform: " << set_m_model_result.error().
