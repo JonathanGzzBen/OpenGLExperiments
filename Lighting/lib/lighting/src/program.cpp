@@ -109,4 +109,19 @@ auto Program::SetUniformMatrix(const std::string& uniform_name,
   glUseProgram(0);
   return {};
 }
+
+auto Program::SetUniformV3(const std::string& uniform_name,
+                    const glm::vec3& vec) const -> std::expected<void, Error> {
+  glUseProgram(program_id_);
+  const auto location = glGetUniformLocation(program_id_, uniform_name.c_str());
+  if (location == -1) {
+    return std::unexpected(Error{
+        .message = std::format("Could not get uniform location of '{}'",
+                               uniform_name)});
+  }
+
+  glUniform3f(location, vec.x, vec.y, vec.z);
+  glUseProgram(0);
+  return {};
+}
 } // namespace lighting

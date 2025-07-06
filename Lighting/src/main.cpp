@@ -176,8 +176,8 @@ auto main() -> int {
   const auto view_matrix = []() {
     auto new_view_matrix = glm::mat4(1.0F);
     new_view_matrix = glm::translate(new_view_matrix,
-                                     glm::vec3(-0.2F, 0.5F, -5.0F));
-    new_view_matrix = glm::rotate(new_view_matrix, glm::radians(45.0F),
+                                     glm::vec3(-0.2F, 0.5F, -4.0F));
+    new_view_matrix = glm::rotate(new_view_matrix, glm::radians(15.0F),
                                   glm::vec3(1.0F, 0.0F, 0.0F));
     new_view_matrix = glm::rotate(new_view_matrix, glm::radians(45.0F),
                                   glm::vec3(0.0F, 1.0F, 0.0F));
@@ -233,6 +233,13 @@ auto main() -> int {
       glfwTerminate();
       return 1;
     }
+    if (const auto set_v_color_result = program->SetUniformV3(
+        "uColor", glm::vec3(0.2F, 0.2F, 0.8F)); !set_v_color_result) {
+      std::cerr << "Failed to set uniform: " << set_v_color_result.error().
+          message << "\n";
+      glfwTerminate();
+      return 1;
+    }
     plane_mesh->Draw(*program, vao, 0);
 
     rotation += rotation_speed * get_delta();
@@ -248,7 +255,16 @@ auto main() -> int {
       glfwTerminate();
       return 1;
     }
+
+    if (const auto set_v_color_result = program->SetUniformV3(
+        "uColor", glm::vec3(0.8F, 0.2F, 0.3F)); !set_v_color_result) {
+      std::cerr << "Failed to set uniform: " << set_v_color_result.error().
+          message << "\n";
+      glfwTerminate();
+      return 1;
+        }
     cube_mesh->Draw(*program, vao, 0);
+    glUseProgram(0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
