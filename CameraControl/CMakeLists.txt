@@ -16,15 +16,15 @@ if (CAMERA_CONTROL_FETCH_GLFW)
             GIT_TAG 7b6aead9fb88b3623e3b3725ebb42670cbe4c579 # 3.4.0
             FIND_PACKAGE_ARGS
     )
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
     FetchContent_MakeAvailable(glfw)
 else ()
     message(STATUS "Using find_package(glfw3)")
     find_package(glfw3 REQUIRED)
 endif ()
-
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 # ---- glew ----
 option(CAMERA_CONTROL_FETCH_GLEW "Use FetchContent for glew (overrides vcpkg)" OFF)
