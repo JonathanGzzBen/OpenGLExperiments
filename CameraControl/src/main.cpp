@@ -153,9 +153,10 @@ auto main() -> int {
     int window_width;
     int window_height;
     glfwGetWindowSize(window, &window_width, &window_height);
+
     return WindowStatus{
-        .aspect_ratio = static_cast<float>(window_width) / static_cast<float>(
-                          window_height)
+        .aspect_ratio = static_cast<float>(window_width) /
+                        static_cast<float>(window_height),
     };
   }();
   glfwSetWindowUserPointer(window, &window_status);
@@ -173,22 +174,28 @@ auto main() -> int {
   };
   glfwSetWindowSizeCallback(window, window_size_callback);
 
-  const auto view_matrix = []() {
-    auto lookat_matrix = glm::lookAt(glm::vec3(3.0F, 0.0F, 3.0F),
-                                     glm::vec3(0.0F, 0.0F, 0.0F),
-                                     glm::vec3(0.0F, 1.0F, 0.0F));
-    return lookat_matrix;
-  }();
+  auto camera_position = glm::vec3(0.0F, 0.0F, 3.0F);
+  auto camera_direction = glm::vec3(0.0F, 0.0F, -1.0F);
+  constexpr auto camera_up = glm::vec3(0.0F, 1.0F, 0.0F);
+  const auto handle_input = [&window, &camera_position, &camera_direction,
+                             &camera_up](const float delta_time) {
+    float movement_speed = 1.0F;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+      camera_position += delta_time * movement_speed * camera_direction;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+      camera_position -= delta_time * movement_speed * camera_direction;
+    }
+    const auto right = glm::normalize(glm::cross(camera_direction, camera_up));
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+      camera_position -= delta_time * movement_speed * right;
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+      camera_position += delta_time * movement_speed * right;
+    }
+  };
 
-  if (const auto set_m_view_result = program->SetUniformMatrix(
-      "mView", view_matrix); !set_m_view_result) {
-    std::cerr << "Failed to set uniform: " << set_m_view_result.error().message
-        << "\n";
-    glfwTerminate();
-    return 1;
-  }
-
-  const auto get_delta = []() {
+  const auto get_delta = []() -> double {
     double current_time = glfwGetTime();
     static double last_time = current_time;
     double delta_time = current_time - last_time;
@@ -196,20 +203,42 @@ auto main() -> int {
     return delta_time;
   };
 
-  const auto rotation_speed = 90.0F; // Speed in degrees per second
-  double rotation = rotation_speed * get_delta();
+  constexpr auto rotation_speed = 90.0F;  // Speed in degrees per second
+  float rotation = 0.0F;
+  const auto get_rotation = [&rotation](float delta_time) -> double {
+    rotation += rotation_speed * delta_time;
+    return rotation;
+  };
 
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
   // Rendering loop
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
-    program->Use();
+    const auto delta_time = static_cast<float>(get_delta());
+    handle_input(delta_time);
+
     const auto projection_matrix = glm::perspective(
         glm::radians(45.0F), window_status.aspect_ratio, 0.1F, 100.0F);
-    if (const auto set_m_projection_result = program->SetUniformMatrix(
-        "mProjection", projection_matrix); !set_m_projection_result) {
-      std::cerr << "Failed to set uniform: " << set_m_projection_result.error().
-          message
-          << "\n";
+    if (const auto set_m_projection_result =
+            program->SetUniformMatrix("mProjection", projection_matrix);
+        !set_m_projection_result) {
+      std::cerr << "Failed to set uniform: "
+                << set_m_projection_result.error().message << "\n";
+      glfwTerminate();
+      return 1;
+    }
+
+    const auto view_matrix = [&window, &camera_position, &camera_direction,
+                              &camera_up]() {
+      const auto lookat_matrix = glm::lookAt(
+          camera_position, camera_position + camera_direction, camera_up);
+      return lookat_matrix;
+    }();
+
+    if (const auto set_m_view_result =
+            program->SetUniformMatrix("mView", view_matrix);
+        !set_m_view_result) {
+      std::cerr << "Failed to set uniform: "
+                << set_m_view_result.error().message << "\n";
       glfwTerminate();
       return 1;
     }
@@ -238,16 +267,14 @@ auto main() -> int {
     }
     plane_mesh->Draw(*program, vao, 0);
 
-    rotation += rotation_speed * get_delta();
-    auto cube_model_matrix = glm::rotate(glm::mat4(1.0F),
-                                         glm::radians(
-                                             static_cast<float>(
-                                               rotation)),
-                                         glm::vec3(1.0F, 1.0F, 0.0F));
-    if (const auto set_m_model_result = program->SetUniformMatrix(
-        "mModel", cube_model_matrix); !set_m_model_result) {
-      std::cerr << "Failed to set uniform: " << set_m_model_result.error().
-          message << "\n";
+    rotation = get_rotation(delta_time);
+    auto cube_model_matrix = glm::rotate(
+        glm::mat4(1.0F), glm::radians(rotation), glm::vec3(1.0F, 1.0F, 0.0F));
+    if (const auto set_m_model_result =
+            program->SetUniformMatrix("mModel", cube_model_matrix);
+        !set_m_model_result) {
+      std::cerr << "Failed to set uniform: "
+                << set_m_model_result.error().message << "\n";
       glfwTerminate();
       return 1;
     }
