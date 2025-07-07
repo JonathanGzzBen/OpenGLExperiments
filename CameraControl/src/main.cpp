@@ -179,19 +179,24 @@ auto main() -> int {
   constexpr auto camera_up = glm::vec3(0.0F, 1.0F, 0.0F);
   const auto handle_input = [&window, &camera_position, &camera_direction,
                              &camera_up](const float delta_time) {
-    float movement_speed = 1.0F;
+    auto movement_direction = glm::vec3(0.0F, 0.0F, 0.0F);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-      camera_position += delta_time * movement_speed * camera_direction;
+      movement_direction += camera_direction;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-      camera_position -= delta_time * movement_speed * camera_direction;
+      movement_direction -= camera_direction;
     }
     const auto right = glm::normalize(glm::cross(camera_direction, camera_up));
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-      camera_position -= delta_time * movement_speed * right;
+      movement_direction -= right;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-      camera_position += delta_time * movement_speed * right;
+      movement_direction += right;
+    }
+    if (movement_direction != glm::vec3(0.0F, 0.0F, 0.0F)) {
+      constexpr float movement_speed = 1.0F;
+      camera_position +=
+          delta_time * movement_speed * glm::normalize(movement_direction);
     }
   };
 
