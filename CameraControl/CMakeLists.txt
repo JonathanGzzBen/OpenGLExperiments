@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.11)
-project(Lighting)
+project(CameraControl)
 
 include(FetchContent)
 
 find_package(OpenGL REQUIRED)
 
 # ---- glfw ----
-option(LIGHTING_FETCH_GLFW "Use FetchContent for glfw (overrides vcpkg)" OFF)
-if (LIGHTING_FETCH_GLFW)
+option(CAMERA_CONTROL_FETCH_GLFW "Use FetchContent for glfw (overrides vcpkg)" OFF)
+if (CAMERA_CONTROL_FETCH_GLFW)
     message(STATUS "Using FetchContent for glfw")
     include(FetchContent)
     FetchContent_Declare(
@@ -27,8 +27,8 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 # ---- glew ----
-option(LIGHTING_FETCH_GLEW "Use FetchContent for glew (overrides vcpkg)" OFF)
-if (LIGHTING_FETCH_GLEW)
+option(CAMERA_CONTROL_FETCH_GLEW "Use FetchContent for glew (overrides vcpkg)" OFF)
+if (CAMERA_CONTROL_FETCH_GLEW)
     message(STATUS "Using FetchContent for glew")
     include(FetchContent)
     FetchContent_Declare(
@@ -44,8 +44,8 @@ else ()
 endif ()
 
 # ---- glm ----
-option(LIGHTING_FETCH_GLM "Use FetchContent for glm (overrides vcpkg)" OFF)
-if (LIGHTING_FETCH_GLM)
+option(CAMERA_CONTROL_FETCH_GLM "Use FetchContent for glm (overrides vcpkg)" OFF)
+if (CAMERA_CONTROL_FETCH_GLM)
     message(STATUS "Using FetchContent for glm")
     include(FetchContent)
     FetchContent_Declare(
@@ -60,8 +60,8 @@ else ()
 endif ()
 
 # ---- tl-expected ----
-option(LIGHTING_FETCH_TL_EXPECTED "Use FetchContent for tl-expected (overrides vcpkg)" OFF)
-if (LIGHTING_FETCH_TL_EXPECTED)
+option(CAMERA_CONTROL_FETCH_TL_EXPECTED "Use FetchContent for tl-expected (overrides vcpkg)" OFF)
+if (CAMERA_CONTROL_FETCH_TL_EXPECTED)
     message(STATUS "Using FetchContent for tl-expected")
     include(FetchContent)
     FetchContent_Declare(
@@ -76,8 +76,8 @@ else ()
 endif ()
 
 # ---- CLI11 ----
-option(LIGHTING_FETCH_CLI11 "Use FetchContent for CLI11 (overrides vcpkg)" OFF)
-if (LIGHTING_FETCH_CLI11)
+option(CAMERA_CONTROL_FETCH_CLI11 "Use FetchContent for CLI11 (overrides vcpkg)" OFF)
+if (CAMERA_CONTROL_FETCH_CLI11)
     message(STATUS "Using FetchContent for CLI11")
     include(FetchContent)
     FetchContent_Declare(
@@ -91,26 +91,26 @@ else ()
     find_package(CLI11 REQUIRED)
 endif ()
 
-set(lighting_lib "${PROJECT_NAME}_lib")
-add_library(${lighting_lib} STATIC
+set(camera_control_lib "${PROJECT_NAME}_lib")
+add_library(${camera_control_lib} STATIC
         lib/lighting/src/program.cpp
         lib/lighting/src/mesh.cpp)
-target_include_directories(${lighting_lib} PUBLIC
+target_include_directories(${camera_control_lib} PUBLIC
         ${CMAKE_SOURCE_DIR}/lib/lighting/include)
-target_link_libraries(${lighting_lib} PUBLIC GLEW::GLEW)
-set_target_properties(${lighting_lib} PROPERTIES CXX_STANDARD 23)
-set_target_properties(${lighting_lib} PROPERTIES CXX_STANDARD_REQUIRED ON)
+target_link_libraries(${camera_control_lib} PUBLIC GLEW::GLEW)
+set_target_properties(${camera_control_lib} PROPERTIES CXX_STANDARD 23)
+set_target_properties(${camera_control_lib} PROPERTIES CXX_STANDARD_REQUIRED ON)
 
 if (MSVC)
     message(STATUS "Adding /bigobj compiler flag for MSVC.")
-    target_compile_options(${lighting_lib} PUBLIC /bigobj)
+    target_compile_options(${camera_control_lib} PUBLIC /bigobj)
 endif ()
 
-set(lighting "${PROJECT_NAME}")
-add_executable(${lighting} src/main.cpp
+set(camera_control "${PROJECT_NAME}")
+add_executable(${camera_control} src/main.cpp
         lib/lighting/include/program.h)
 
-target_link_libraries(${lighting} ${lighting_lib} glfw GLEW::GLEW glm::glm tl::expected CLI11::CLI11)
-target_include_directories(${lighting} PRIVATE ${CMAKE_SOURCE_DIR}/include)
-set_target_properties(${lighting} PROPERTIES CXX_STANDARD 23)
-set_target_properties(${lighting} PROPERTIES CXX_STANDARD_REQUIRED ON)
+target_link_libraries(${camera_control} ${camera_control_lib} glfw GLEW::GLEW glm::glm tl::expected CLI11::CLI11)
+target_include_directories(${camera_control} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+set_target_properties(${camera_control} PROPERTIES CXX_STANDARD 23)
+set_target_properties(${camera_control} PROPERTIES CXX_STANDARD_REQUIRED ON)
