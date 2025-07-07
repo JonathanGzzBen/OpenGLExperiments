@@ -59,22 +59,6 @@ else ()
     find_package(glm REQUIRED)
 endif ()
 
-# ---- tl-expected ----
-option(CAMERA_CONTROL_FETCH_TL_EXPECTED "Use FetchContent for tl-expected (overrides vcpkg)" OFF)
-if (CAMERA_CONTROL_FETCH_TL_EXPECTED)
-    message(STATUS "Using FetchContent for tl-expected")
-    include(FetchContent)
-    FetchContent_Declare(
-            tl-expected
-            GIT_REPOSITORY https://github.com/TartanLlama/expected
-            GIT_TAG 292eff8bd8ee230a7df1d6a1c00c4ea0eb2f0362 # v1.1.0
-    )
-    FetchContent_MakeAvailable(tl-expected)
-else ()
-    message(STATUS "Using find_package(tl-expected)")
-    find_package(tl-expected REQUIRED)
-endif ()
-
 # ---- CLI11 ----
 option(CAMERA_CONTROL_FETCH_CLI11 "Use FetchContent for CLI11 (overrides vcpkg)" OFF)
 if (CAMERA_CONTROL_FETCH_CLI11)
@@ -110,7 +94,7 @@ set(camera_control "${PROJECT_NAME}")
 add_executable(${camera_control} src/main.cpp
         lib/camera_control/include/program.h)
 
-target_link_libraries(${camera_control} ${camera_control_lib} glfw GLEW::GLEW glm::glm tl::expected CLI11::CLI11)
+target_link_libraries(${camera_control} ${camera_control_lib} glfw GLEW::GLEW glm::glm CLI11::CLI11)
 target_include_directories(${camera_control} PRIVATE ${CMAKE_SOURCE_DIR}/include)
 set_target_properties(${camera_control} PROPERTIES CXX_STANDARD 23)
 set_target_properties(${camera_control} PROPERTIES CXX_STANDARD_REQUIRED ON)
