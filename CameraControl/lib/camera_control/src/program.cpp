@@ -3,7 +3,7 @@
 #include <sstream>
 #include <fstream>
 
-namespace lighting {
+namespace camera_control {
 Program::Program(unsigned int program_id) : program_id_(program_id) {
 }
 
@@ -124,4 +124,4 @@ auto Program::SetUniformV3(const std::string& uniform_name,
   glUseProgram(0);
   return {};
 }
-} // namespace lighting
+} // namespace camera_control

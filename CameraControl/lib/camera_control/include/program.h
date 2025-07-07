@@ -12,7 +12,7 @@
 
 #include  "gl/gl.h"
 
-namespace lighting {
+namespace camera_control {
 class Program {
 private:
   unsigned int program_id_ = 0;
@@ -52,7 +52,7 @@ public:
     std::expected<
       void, Error>;
 };
-} // namespace lighting
+} // namespace camera_control
 
 
 #endif //PROGRAM_H

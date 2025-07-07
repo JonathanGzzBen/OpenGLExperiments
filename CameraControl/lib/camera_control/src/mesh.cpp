@@ -1,18 +1,18 @@
 #include  "mesh.h"
 
-lighting::Mesh::Mesh(const unsigned int vbo, const unsigned int ebo,
+camera_control::Mesh::Mesh(const unsigned int vbo, const unsigned int ebo,
                      const size_t indices_count): vbo(vbo),
                                                   ebo(ebo),
                                                   indices_count(indices_count) {
 }
 
-lighting::Mesh::Mesh(Mesh&& other) noexcept {
+camera_control::Mesh::Mesh(Mesh&& other) noexcept {
   std::swap(vbo, other.vbo);
   std::swap(ebo, other.ebo);
   std::swap(indices_count, other.indices_count);
 }
 
-lighting::Mesh::~Mesh() {
+camera_control::Mesh::~Mesh() {
   if (glIsBuffer(vbo)) {
     glDeleteBuffers(1, &vbo);
   }
@@ -21,7 +21,7 @@ lighting::Mesh::~Mesh() {
   }
 }
 
-auto lighting::Mesh::Create(const std::vector<Vertex>& vertices,
+auto camera_control::Mesh::Create(const std::vector<Vertex>& vertices,
                             const std::vector<unsigned int>& indices) ->
   std::expected<Mesh, Error> {
   unsigned int vbo;
@@ -40,7 +40,7 @@ auto lighting::Mesh::Create(const std::vector<Vertex>& vertices,
   return {Mesh(vbo, ebo, indices.size())};
 }
 
-auto lighting::Mesh::Draw(const Program& program, const unsigned int vao,
+auto camera_control::Mesh::Draw(const Program& program, const unsigned int vao,
                           const unsigned int binding_index) const -> void {
   program.Use();
   glBindVertexArray(vao);

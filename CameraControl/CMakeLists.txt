@@ -93,10 +93,10 @@ endif ()
 
 set(camera_control_lib "${PROJECT_NAME}_lib")
 add_library(${camera_control_lib} STATIC
-        lib/lighting/src/program.cpp
-        lib/lighting/src/mesh.cpp)
+        lib/camera_control/src/program.cpp
+        lib/camera_control/src/mesh.cpp)
 target_include_directories(${camera_control_lib} PUBLIC
-        ${CMAKE_SOURCE_DIR}/lib/lighting/include)
+        ${CMAKE_SOURCE_DIR}/lib/camera_control/include)
 target_link_libraries(${camera_control_lib} PUBLIC GLEW::GLEW)
 set_target_properties(${camera_control_lib} PROPERTIES CXX_STANDARD 23)
 set_target_properties(${camera_control_lib} PROPERTIES CXX_STANDARD_REQUIRED ON)
@@ -108,7 +108,7 @@ endif ()
 
 set(camera_control "${PROJECT_NAME}")
 add_executable(${camera_control} src/main.cpp
-        lib/lighting/include/program.h)
+        lib/camera_control/include/program.h)
 
 target_link_libraries(${camera_control} ${camera_control_lib} glfw GLEW::GLEW glm::glm tl::expected CLI11::CLI11)
 target_include_directories(${camera_control} PRIVATE ${CMAKE_SOURCE_DIR}/include)

@@ -32,7 +32,7 @@ auto main() -> int {
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
-  GLFWwindow* window = glfwCreateWindow(800, 600, "Lighting", nullptr, nullptr);
+  GLFWwindow* window = glfwCreateWindow(800, 600, "CameraControl", nullptr, nullptr);
   if (window == nullptr) {
     std::cerr << "Failed to create GLFW window!\n";
     glfwTerminate();
@@ -56,7 +56,7 @@ auto main() -> int {
                           GL_TRUE);
   }
 
-  const auto program = lighting::Program::Create(
+  const auto program = camera_control::Program::Create(
       "shaders/vertex.glsl", "shaders/fragment.glsl");
   if (!program) {
     std::cerr << "Failed to initialize program: " << program.error().message <<
@@ -76,14 +76,14 @@ auto main() -> int {
   glVertexArrayAttribBinding(vao, 1, 0);
   glVertexArrayAttribBinding(vao, 2, 0);
   glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE,
-                            offsetof(lighting::Vertex, x));
+                            offsetof(camera_control::Vertex, x));
   glVertexArrayAttribFormat(vao, 1, 2, GL_FLOAT, GL_FALSE,
-                            offsetof(lighting::Vertex, u));
+                            offsetof(camera_control::Vertex, u));
   glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE,
-                            offsetof(lighting::Vertex, nx));
+                            offsetof(camera_control::Vertex, nx));
 
   const auto cube_mesh = []() {
-    std::vector<lighting::Vertex> vertices = {
+    std::vector<camera_control::Vertex> vertices = {
         // Front face
         {.x = -0.5F, .y = -0.5F, .z = 0.5F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
          .ny = 0.0F, .nz = 0.0F},
@@ -118,7 +118,7 @@ auto main() -> int {
         // Lower face
         4, 0, 3, 3, 7, 4,
     };
-    return lighting::Mesh::Create(vertices, indices);
+    return camera_control::Mesh::Create(vertices, indices);
   }();
 
   if (!cube_mesh) {
@@ -129,7 +129,7 @@ auto main() -> int {
   }
 
   const auto plane_mesh = []() {
-    const std::vector<lighting::Vertex> vertices = {
+    const std::vector<camera_control::Vertex> vertices = {
         {.x = -1.0F, .y = -1.0F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
          .ny = 0.0F, .nz = 0.0F},
         {.x = -1.0F, .y = 1.0F, .z = 0.0F, .u = 0.0F, .v = 0.0F, .nx = 0.0F,
@@ -142,7 +142,7 @@ auto main() -> int {
     const std::vector<unsigned int> indices = {
         0, 1, 2, 2, 3, 0,
     };
-    return lighting::Mesh::Create(vertices, indices);
+    return camera_control::Mesh::Create(vertices, indices);
   }();
 
   using WindowStatus = struct WindowStatus {

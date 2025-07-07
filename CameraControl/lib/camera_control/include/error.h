@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace lighting {
+namespace camera_control {
 using Error = struct Error {
   std::string message;
 };
@@ -12,6 +12,6 @@ inline auto with_context(Error err, const std::string& context) -> Error {
   err.message = context + ": " + err.message;
   return err;
 }
-} // namespace lighting
+} // namespace camera_control
 
 #endif //ERROR_H
