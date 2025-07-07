@@ -175,16 +175,18 @@ auto main() -> int {
   glfwSetWindowSizeCallback(window, window_size_callback);
 
   auto camera_position = glm::vec3(0.0F, 0.0F, 3.0F);
-  auto camera_direction = glm::vec3(0.0F, 0.0F, -1.0F);
+  auto camera_front = glm::vec3(0.0F, 0.0F, -1.0F);
   constexpr auto camera_up = glm::vec3(0.0F, 1.0F, 0.0F);
-  const auto handle_input = [&window, &camera_position, &camera_direction,
-                             &camera_up](const float delta_time) {
+  auto pitch = 0.0F;
+  auto yaw = -90.0F;
+  const auto handle_input = [&window, &camera_position, &camera_front,
+                             &camera_up, &pitch, &yaw](const float delta_time) {
     auto movement_direction = glm::vec3(0.0F, 0.0F, 0.0F);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-      movement_direction += camera_direction;
+      movement_direction += camera_front;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-      movement_direction -= camera_direction;
+      movement_direction -= camera_front;
     }
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
       movement_direction -= camera_up;
@@ -192,7 +194,7 @@ auto main() -> int {
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
       movement_direction += camera_up;
     }
-    const auto right = glm::normalize(glm::cross(camera_direction, camera_up));
+    const auto right = glm::normalize(glm::cross(camera_front, camera_up));
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
       movement_direction -= right;
     }
@@ -204,6 +206,32 @@ auto main() -> int {
       camera_position +=
           delta_time * movement_speed * glm::normalize(movement_direction);
     }
+
+    // Camera rotation
+    static constexpr auto rotation_speed = 10.0F;
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+      pitch -= rotation_speed * delta_time;
+      if (pitch <= -90.0F) {
+        pitch = -89.9F;
+      }
+    }
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+      pitch += rotation_speed * delta_time;
+      if (90 <= pitch) {
+        pitch = 89.9F;
+      }
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+      yaw -= rotation_speed * delta_time;
+    }
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+      yaw += rotation_speed * delta_time;
+    }
+    glm::vec3 direction;
+    direction.x = glm::cos(glm::radians(yaw)) * glm::cos(glm::radians(pitch));
+    direction.y = glm::sin(glm::radians(pitch));
+    direction.z = glm::sin(glm::radians(yaw)) * glm::cos(glm::radians(pitch));
+    camera_front = glm::normalize(direction);
   };
 
   const auto get_delta = []() -> double {
@@ -238,10 +266,10 @@ auto main() -> int {
       return 1;
     }
 
-    const auto view_matrix = [&window, &camera_position, &camera_direction,
+    const auto view_matrix = [&window, &camera_position, &camera_front,
                               &camera_up]() {
       const auto lookat_matrix = glm::lookAt(
-          camera_position, camera_position + camera_direction, camera_up);
+          camera_position, camera_position + camera_front, camera_up);
       return lookat_matrix;
     }();
 
