@@ -194,7 +194,7 @@ auto main() -> int {
       movement_direction += right;
     }
     if (movement_direction != glm::vec3(0.0F, 0.0F, 0.0F)) {
-      constexpr float movement_speed = 1.0F;
+      static constexpr float movement_speed = 1.0F;
       camera_position +=
           delta_time * movement_speed * glm::normalize(movement_direction);
     }
@@ -208,9 +208,9 @@ auto main() -> int {
     return delta_time;
   };
 
-  constexpr auto rotation_speed = 90.0F;  // Speed in degrees per second
-  float rotation = 0.0F;
-  const auto get_rotation = [&rotation](float delta_time) -> double {
+  const auto get_rotation = [](float delta_time) -> float {
+    static constexpr auto rotation_speed = 90.0F;  // Speed in degrees per second
+    static float rotation = 0.0F;
     rotation += rotation_speed * delta_time;
     return rotation;
   };
@@ -272,7 +272,7 @@ auto main() -> int {
     }
     plane_mesh->Draw(*program, vao, 0);
 
-    rotation = get_rotation(delta_time);
+    const auto rotation = get_rotation(delta_time);
     auto cube_model_matrix = glm::rotate(
         glm::mat4(1.0F), glm::radians(rotation), glm::vec3(1.0F, 1.0F, 0.0F));
     if (const auto set_m_model_result =
