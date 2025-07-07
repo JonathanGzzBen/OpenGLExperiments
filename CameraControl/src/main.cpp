@@ -186,6 +186,12 @@ auto main() -> int {
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
       movement_direction -= camera_direction;
     }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+      movement_direction -= camera_up;
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+      movement_direction += camera_up;
+    }
     const auto right = glm::normalize(glm::cross(camera_direction, camera_up));
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
       movement_direction -= right;
