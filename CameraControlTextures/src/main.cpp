@@ -96,31 +96,31 @@ auto main() -> int {
          .v = 0.0F,
          .nx = 0.0F,
          .ny = 0.0F,
-         .nz = 0.0F},
+         .nz = 0.0F},  // Bottom left
         {.x = -0.5F,
          .y = 0.5F,
          .z = 0.5F,
          .u = 0.0F,
-         .v = 0.0F,
+         .v = 1.0F,
          .nx = 0.0F,
          .ny = 0.0F,
-         .nz = 0.0F},
+         .nz = 0.0F},  // Top left
         {.x = 0.5F,
          .y = 0.5F,
          .z = 0.5F,
-         .u = 0.0F,
-         .v = 0.0F,
+         .u = 1.0F,
+         .v = 1.0F,
          .nx = 0.0F,
          .ny = 0.0F,
-         .nz = 0.0F},
+         .nz = 0.0F},  // Top right
         {.x = 0.5F,
          .y = -0.5F,
          .z = 0.5F,
-         .u = 0.0F,
+         .u = 1.0F,
          .v = 0.0F,
          .nx = 0.0F,
          .ny = 0.0F,
-         .nz = 0.0F},
+         .nz = 0.0F},  // Bottom right
 
         // Back face
         {.x = -0.5F,
@@ -130,31 +130,31 @@ auto main() -> int {
          .v = 0.0F,
          .nx = 0.0F,
          .ny = 0.0F,
-         .nz = 0.0F},
+         .nz = 0.0F},  // Bottom left
         {.x = -0.5F,
          .y = 0.5F,
          .z = -0.5F,
          .u = 0.0F,
-         .v = 0.0F,
+         .v = 1.0F,
          .nx = 0.0F,
          .ny = 0.0F,
-         .nz = 0.0F},
+         .nz = 0.0F},  // Top left
         {.x = 0.5F,
          .y = 0.5F,
          .z = -0.5F,
-         .u = 0.0F,
-         .v = 0.0F,
+         .u = 1.0F,
+         .v = 1.0F,
          .nx = 0.0F,
          .ny = 0.0F,
-         .nz = 0.0F},
+         .nz = 0.0F},  // Top right
         {.x = 0.5F,
          .y = -0.5F,
          .z = -0.5F,
-         .u = 0.0F,
+         .u = 1.0F,
          .v = 0.0F,
          .nx = 0.0F,
          .ny = 0.0F,
-         .nz = 0.0F},
+         .nz = 0.0F},  // Bottom  right
     };
     const std::vector<unsigned int> indices = {
         // Front face
@@ -219,31 +219,31 @@ auto main() -> int {
          .v = 0.0F,
          .nx = 0.0F,
          .ny = 0.0F,
-         .nz = 0.0F},
+         .nz = 0.0F},  // Botom left
         {.x = -1.0F,
          .y = 1.0F,
          .z = 0.0F,
          .u = 0.0F,
-         .v = 0.0F,
+         .v = 1.0F,
          .nx = 0.0F,
          .ny = 0.0F,
-         .nz = 0.0F},
+         .nz = 0.0F},  // Top left
         {.x = 1.0F,
          .y = 1.0F,
          .z = 0.0F,
-         .u = 0.0F,
-         .v = 0.0F,
+         .u = 1.0F,
+         .v = 1.0F,
          .nx = 0.0F,
          .ny = 0.0F,
-         .nz = 0.0F},
+         .nz = 0.0F},  // Top right
         {.x = 1.0F,
          .y = -1.0F,
          .z = 0.0F,
-         .u = 0.0F,
+         .u = 1.0F,
          .v = 0.0F,
          .nx = 0.0F,
          .ny = 0.0F,
-         .nz = 0.0F},
+         .nz = 0.0F},  // Bottom right
     };
     const std::vector<unsigned int> indices = {
         0, 1, 2, 2, 3, 0,
@@ -356,6 +356,52 @@ auto main() -> int {
     return rotation;
   };
 
+  // Textures start
+  auto load_texture = [](unsigned int vao, const std::string& filename)
+      -> std::expected<unsigned int, std::string> {
+    stbi_set_flip_vertically_on_load(true);
+    int x, y, n;
+    unsigned char* data;
+    data = stbi_load(filename.c_str(), &x, &y, &n, 3);
+    if (data == nullptr) {
+      stbi_image_free(data);
+      return std::unexpected(std::format("Coud not load texture '{}': {}",
+                                         filename, stbi_failure_reason()));
+    }
+
+    glBindVertexArray(vao);
+    unsigned int texture_2d;
+    glCreateTextures(GL_TEXTURE_2D, 1, &texture_2d);
+    glBindTexture(GL_TEXTURE_2D, texture_2d);
+    glTextureParameteri(texture_2d, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTextureParameteri(texture_2d, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTextureParameteri(texture_2d, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureParameteri(texture_2d, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE,
+                 data);
+
+    stbi_image_free(data);
+
+    return {texture_2d};
+  };
+
+  const auto ground_texture =
+      load_texture(vao, "textures/Grass_ground_Texture.jpg");
+  if (!ground_texture) {
+    std::println(std::cerr, "Could not texture: {}", ground_texture.error());
+    glfwTerminate();
+    return 1;
+  }
+
+  const auto cube_texture = load_texture(vao, "textures/Glacirno.png");
+  if (!cube_texture) {
+    std::println(std::cerr, "Could not texture: {}", cube_texture.error());
+    glfwTerminate();
+    return 1;
+  }
+
+  glEnable(GL_DEPTH_TEST);
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
   // Rendering loop
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
@@ -389,7 +435,7 @@ auto main() -> int {
       return 1;
     }
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     program->Use();
     auto plane_model_matrix = glm::mat4(1.0F);
     plane_model_matrix =
@@ -405,14 +451,17 @@ auto main() -> int {
       return 1;
     }
     if (const auto set_v_color_result =
-            program->SetUniformV3("uColor", glm::vec3(0.2F, 0.2F, 0.8F));
+            // program->SetUniformV3("uColor", glm::vec3(0.2F, 0.2F, 0.8F));
+        program->SetUniformV3("uColor", glm::vec3(0.0, 0.0, 0.0));
         !set_v_color_result) {
       std::cerr << "Failed to set uniform: "
                 << set_v_color_result.error().message << "\n";
       glfwTerminate();
       return 1;
     }
+    glBindTexture(GL_TEXTURE_2D, *ground_texture);
     plane_mesh->Draw(*program, vao, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     const auto rotation = get_rotation(delta_time);
     auto cube_model_matrix = glm::rotate(
@@ -427,14 +476,17 @@ auto main() -> int {
     }
 
     if (const auto set_v_color_result =
-            program->SetUniformV3("uColor", glm::vec3(0.8F, 0.2F, 0.3F));
+            program->SetUniformV3("uColor", glm::vec3(0.0F, 0.0F, 0.0F));
+        // program->SetUniformV3("uColor", glm::vec3(0.8F, 0.2F, 0.3F));
         !set_v_color_result) {
       std::cerr << "Failed to set uniform: "
                 << set_v_color_result.error().message << "\n";
       glfwTerminate();
       return 1;
     }
+    glBindTexture(GL_TEXTURE_2D, *cube_texture);
     cube_mesh->Draw(*program, vao, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
 
     glfwSwapBuffers(window);
