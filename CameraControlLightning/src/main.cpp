@@ -84,7 +84,7 @@ auto main() -> int {
   glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE,
                             offsetof(camera_control::Vertex, nx));
 
-  const auto cube_mesh = []() {
+  const auto get_cube_mesh = []() {
     std::vector<camera_control::Vertex> vertices = {
         // Front face
         {.x = -0.5F,
@@ -199,11 +199,21 @@ auto main() -> int {
         4,
     };
     return camera_control::Mesh::Create(vertices, indices);
-  }();
+  };
+
+  const auto cube_mesh = get_cube_mesh();
 
   if (!cube_mesh) {
     std::cerr << "Failed to initialize mesh: " << cube_mesh.error().message
               << "\n";
+    glfwTerminate();
+    return 1;
+  }
+
+  const auto lighting_source_mesh = get_cube_mesh();
+  if (!lighting_source_mesh) {
+    std::cerr << "Failed to initialize mesh: "
+              << lighting_source_mesh.error().message << "\n";
     glfwTerminate();
     return 1;
   }
@@ -278,7 +288,7 @@ auto main() -> int {
   };
   glfwSetWindowSizeCallback(window, window_size_callback);
 
-  auto camera_position = glm::vec3(0.0F, 0.0F, 3.0F);
+  auto camera_position = glm::vec3(0.0F, 0.2F, 3.0F);
   auto camera_front = glm::vec3(0.0F, 0.0F, -1.0F);
   constexpr auto camera_up = glm::vec3(0.0F, 1.0F, 0.0F);
   auto pitch = 0.0F;
@@ -346,14 +356,6 @@ auto main() -> int {
     return delta_time;
   };
 
-  const auto get_rotation = [](float delta_time) -> float {
-    static constexpr auto rotation_speed =
-        90.0F;  // Speed in degrees per second
-    static float rotation = 0.0F;
-    rotation += rotation_speed * delta_time;
-    return rotation;
-  };
-
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
   // Rendering loop
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
@@ -391,7 +393,7 @@ auto main() -> int {
     program->Use();
     auto plane_model_matrix = glm::mat4(1.0F);
     plane_model_matrix =
-        glm::translate(plane_model_matrix, glm::vec3(0.0F, -1.0F, 0.0F));
+        glm::translate(plane_model_matrix, glm::vec3(0.0F, -0.5F, 0.0F));
     plane_model_matrix = glm::rotate(plane_model_matrix, glm::radians(90.0F),
                                      glm::vec3(1.0F, 0.0F, 0.0F));
     if (const auto set_m_model_result =
@@ -412,9 +414,8 @@ auto main() -> int {
     }
     plane_mesh->Draw(*program, vao, 0);
 
-    const auto rotation = get_rotation(delta_time);
-    auto cube_model_matrix = glm::rotate(
-        glm::mat4(1.0F), glm::radians(rotation), glm::vec3(1.0F, 1.0F, 0.0F));
+    // Cube
+    auto cube_model_matrix = glm::mat4(1.0F);
     if (const auto set_m_model_result =
             program->SetUniformMatrix("mModel", cube_model_matrix);
         !set_m_model_result) {
@@ -433,6 +434,33 @@ auto main() -> int {
       return 1;
     }
     cube_mesh->Draw(*program, vao, 0);
+
+    // Lighting source
+    auto lighting_source_model_matrix = glm::mat4(1.0F);
+    lighting_source_model_matrix = glm::translate(lighting_source_model_matrix,
+                                                  glm::vec3(0.8F, 0.8F, 0.8F));
+    lighting_source_model_matrix = glm::scale(lighting_source_model_matrix,
+                                              glm::vec3(0.25F, 0.25F, 0.25F));
+
+    if (const auto set_m_model_result =
+            program->SetUniformMatrix("mModel", lighting_source_model_matrix);
+        !set_m_model_result) {
+      std::cerr << "Failed to set uniform: "
+                << set_m_model_result.error().message << "\n";
+      glfwTerminate();
+      return 1;
+    }
+
+    if (const auto set_v_color_result =
+            program->SetUniformV3("uColor", glm::vec3(0.8F, 0.2F, 0.3F));
+        !set_v_color_result) {
+      std::cerr << "Failed to set uniform: "
+                << set_v_color_result.error().message << "\n";
+      glfwTerminate();
+      return 1;
+    }
+    lighting_source_mesh->Draw(*program, vao, 0);
+
     glUseProgram(0);
 
     glfwSwapBuffers(window);
