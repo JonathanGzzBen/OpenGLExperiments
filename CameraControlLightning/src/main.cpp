@@ -58,11 +58,21 @@ auto main() -> int {
                           GL_TRUE);
   }
 
-  const auto program = camera_control::Program::Create("shaders/vertex.glsl",
-                                                       "shaders/fragment.glsl");
-  if (!program) {
-    std::cerr << "Failed to initialize program: " << program.error().message
-              << "\n";
+  const auto program_lighting = camera_control::Program::Create(
+      "shaders/vertex.glsl", "shaders/fragment_lighting_source.glsl");
+  if (!program_lighting) {
+    std::cerr << "Failed to initialize program: "
+              << program_lighting.error().message << "\n";
+
+    glfwTerminate();
+    return 1;
+  }
+
+  const auto program_objects = camera_control::Program::Create(
+      "shaders/vertex.glsl", "shaders/fragment.glsl");
+  if (!program_objects) {
+    std::cerr << "Failed to initialize program: "
+              << program_objects.error().message << "\n";
 
     glfwTerminate();
     return 1;
@@ -365,7 +375,7 @@ auto main() -> int {
     const auto projection_matrix = glm::perspective(
         glm::radians(45.0F), window_status.aspect_ratio, 0.1F, 100.0F);
     if (const auto set_m_projection_result =
-            program->SetUniformMatrix("mProjection", projection_matrix);
+            program_objects->SetUniformMatrix("mProjection", projection_matrix);
         !set_m_projection_result) {
       std::cerr << "Failed to set uniform: "
                 << set_m_projection_result.error().message << "\n";
@@ -381,7 +391,7 @@ auto main() -> int {
     }();
 
     if (const auto set_m_view_result =
-            program->SetUniformMatrix("mView", view_matrix);
+            program_objects->SetUniformMatrix("mView", view_matrix);
         !set_m_view_result) {
       std::cerr << "Failed to set uniform: "
                 << set_m_view_result.error().message << "\n";
@@ -390,34 +400,33 @@ auto main() -> int {
     }
 
     glClear(GL_COLOR_BUFFER_BIT);
-    program->Use();
     auto plane_model_matrix = glm::mat4(1.0F);
     plane_model_matrix =
         glm::translate(plane_model_matrix, glm::vec3(0.0F, -0.5F, 0.0F));
     plane_model_matrix = glm::rotate(plane_model_matrix, glm::radians(90.0F),
                                      glm::vec3(1.0F, 0.0F, 0.0F));
     if (const auto set_m_model_result =
-            program->SetUniformMatrix("mModel", plane_model_matrix);
+            program_objects->SetUniformMatrix("mModel", plane_model_matrix);
         !set_m_model_result) {
       std::cerr << "Failed to set uniform: "
                 << set_m_model_result.error().message << "\n";
       glfwTerminate();
       return 1;
     }
-    if (const auto set_v_color_result =
-            program->SetUniformV3("uColor", glm::vec3(0.2F, 0.2F, 0.8F));
+    if (const auto set_v_color_result = program_objects->SetUniformV3(
+            "uColor", glm::vec3(0.2F, 0.2F, 0.8F));
         !set_v_color_result) {
       std::cerr << "Failed to set uniform: "
                 << set_v_color_result.error().message << "\n";
       glfwTerminate();
       return 1;
     }
-    plane_mesh->Draw(*program, vao, 0);
+    plane_mesh->Draw(*program_objects, vao, 0);
 
     // Cube
     auto cube_model_matrix = glm::mat4(1.0F);
     if (const auto set_m_model_result =
-            program->SetUniformMatrix("mModel", cube_model_matrix);
+            program_objects->SetUniformMatrix("mModel", cube_model_matrix);
         !set_m_model_result) {
       std::cerr << "Failed to set uniform: "
                 << set_m_model_result.error().message << "\n";
@@ -425,41 +434,49 @@ auto main() -> int {
       return 1;
     }
 
-    if (const auto set_v_color_result =
-            program->SetUniformV3("uColor", glm::vec3(0.8F, 0.2F, 0.3F));
+    if (const auto set_v_color_result = program_objects->SetUniformV3(
+            "uColor", glm::vec3(0.8F, 0.2F, 0.3F));
         !set_v_color_result) {
       std::cerr << "Failed to set uniform: "
                 << set_v_color_result.error().message << "\n";
       glfwTerminate();
       return 1;
     }
-    cube_mesh->Draw(*program, vao, 0);
+    cube_mesh->Draw(*program_objects, vao, 0);
 
     // Lighting source
+    program_lighting->Use();
+    if (const auto set_m_projection_result = program_lighting->SetUniformMatrix(
+            "mProjection", projection_matrix);
+        !set_m_projection_result) {
+      std::cerr << "Failed to set uniform: "
+                << set_m_projection_result.error().message << "\n";
+      glfwTerminate();
+      return 1;
+    }
+    if (const auto set_m_view_result =
+            program_lighting->SetUniformMatrix("mView", view_matrix);
+        !set_m_view_result) {
+      std::cerr << "Failed to set uniform: "
+                << set_m_view_result.error().message << "\n";
+      glfwTerminate();
+      return 1;
+    }
     auto lighting_source_model_matrix = glm::mat4(1.0F);
     lighting_source_model_matrix = glm::translate(lighting_source_model_matrix,
                                                   glm::vec3(0.8F, 0.8F, 0.8F));
     lighting_source_model_matrix = glm::scale(lighting_source_model_matrix,
                                               glm::vec3(0.25F, 0.25F, 0.25F));
 
-    if (const auto set_m_model_result =
-            program->SetUniformMatrix("mModel", lighting_source_model_matrix);
+    if (const auto set_m_model_result = program_lighting->SetUniformMatrix(
+            "mModel", lighting_source_model_matrix);
         !set_m_model_result) {
       std::cerr << "Failed to set uniform: "
                 << set_m_model_result.error().message << "\n";
       glfwTerminate();
       return 1;
     }
-
-    if (const auto set_v_color_result =
-            program->SetUniformV3("uColor", glm::vec3(0.8F, 0.2F, 0.3F));
-        !set_v_color_result) {
-      std::cerr << "Failed to set uniform: "
-                << set_v_color_result.error().message << "\n";
-      glfwTerminate();
-      return 1;
-    }
-    lighting_source_mesh->Draw(*program, vao, 0);
+    lighting_source_mesh->Draw(*program_lighting, vao, 0);
 
     glUseProgram(0);
 
