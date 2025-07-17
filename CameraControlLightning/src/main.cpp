@@ -305,6 +305,16 @@ auto main() -> int {
 
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
+
+  if (const auto set_light_position_result = program_objects->SetUniformV3(
+          "lightPosition", glm::vec3(0.8F, 0.8F, 0.8F));
+      !set_light_position_result) {
+    std::cerr << "Failed to set uniform: "
+              << set_light_position_result.error().message << "\n";
+    glfwTerminate();
+    return 1;
+  }
+
   // Rendering loop
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
     const auto delta_time = static_cast<float>(get_delta());
