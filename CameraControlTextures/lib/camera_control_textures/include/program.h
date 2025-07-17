@@ -5,28 +5,26 @@
 
 #include <expected>
 #include <format>
-#include <string>
 #include <glm/ext/matrix_float4x4.hpp>
+#include <string>
 
-#include  "error.h"
-
-#include  "gl/gl.h"
+#include "error.h"
+#include "gl/gl.h"
 
 namespace camera_control {
 class Program {
-private:
+ private:
   unsigned int program_id_ = 0;
 
   explicit Program(unsigned int program_id);
 
-  static auto read_file(
-      const std::string& filename) -> std::expected<std::string, Error>;
+  static auto read_file(const std::string& filename)
+      -> std::expected<std::string, Error>;
 
-  static auto compile_shader(const GLenum type,
-                             const std::string& filename) -> std::expected<
-    GLuint, Error>;
+  static auto compile_shader(const GLenum type, const std::string& filename)
+      -> std::expected<GLuint, Error>;
 
-public:
+ public:
   // Delete copy constructors
   Program(const Program&) = delete;
   auto operator=(const Program&) -> Program& = delete;
@@ -37,22 +35,22 @@ public:
   ~Program();
 
   static auto Create(const std::string& vertex_shader_filename,
-                     const std::string& fragment_shader_filename) ->
-    std::expected<Program, Error>;
+                     const std::string& fragment_shader_filename)
+      -> std::expected<Program, Error>;
 
   auto Use() const -> void;
 
   [[nodiscard]] auto SetUniformMatrix(const std::string& uniform_name,
-                                      const glm::mat4& matrix) const ->
-    std::expected<
-      void, Error>;
+                                      const glm::mat4& matrix) const
+      -> std::expected<void, Error>;
 
   [[nodiscard]] auto SetUniformV3(const std::string& uniform_name,
-                           const glm::vec3& vec) const ->
-    std::expected<
-      void, Error>;
+                                  const glm::vec3& vec) const
+      -> std::expected<void, Error>;
+
+  [[nodiscard]] auto SetUniform1i(const std::string& uniform_name, int val) const
+      -> std::expected<void, Error>;
 };
-} // namespace camera_control_textures
+}  // namespace camera_control
 
-
-#endif //PROGRAM_H
+#endif  // PROGRAM_H

@@ -357,46 +357,92 @@ auto main() -> int {
   };
 
   // Textures start
-  auto load_texture = [](unsigned int vao, const std::string& filename)
-      -> std::expected<unsigned int, std::string> {
+  auto load_texture_with_paint = [](unsigned int vao,
+                                    const std::string& filename)
+      -> std::expected<std::tuple<unsigned int, unsigned int>, std::string> {
     stbi_set_flip_vertically_on_load(true);
-    int x, y, n;
-    unsigned char* data;
-    data = stbi_load(filename.c_str(), &x, &y, &n, 3);
-    if (data == nullptr) {
-      stbi_image_free(data);
-      return std::unexpected(std::format("Coud not load texture '{}': {}",
-                                         filename, stbi_failure_reason()));
+    auto get_image_data = [](const std::string& filename, int n_components)
+        -> std::expected<std::tuple<std::unique_ptr<unsigned char,
+                                                    decltype(&stbi_image_free)>,
+                                    int, int>,
+                         std::string> {
+      int x, y, n;
+      unsigned char* data =
+          stbi_load(filename.c_str(), &x, &y, &n, n_components);
+      if (data == nullptr) {
+        return std::unexpected(std::format("Could not load texture '{}': {}",
+                                           filename, stbi_failure_reason()));
+      }
+
+      std::unique_ptr<unsigned char, decltype(&stbi_image_free)> tex_data(
+          data, &stbi_image_free);
+      return {{std::move(tex_data), x, y}};
+    };
+
+    auto tex0 = get_image_data(filename, 3);
+    if (!tex0) {
+      return std::unexpected(
+          std::format("Coud not load texture '{}'", filename));
+    }
+
+    auto tex1 = get_image_data("textures/pink_paint.png", 4);
+    if (!tex1) {
+      return std::unexpected(std::format("Coud not load texture '{}'", 1));
     }
 
     glBindVertexArray(vao);
-    unsigned int texture_2d;
-    glCreateTextures(GL_TEXTURE_2D, 1, &texture_2d);
-    glBindTexture(GL_TEXTURE_2D, texture_2d);
-    glTextureParameteri(texture_2d, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTextureParameteri(texture_2d, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTextureParameteri(texture_2d, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTextureParameteri(texture_2d, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    unsigned int texture0;
+    glCreateTextures(GL_TEXTURE_2D, 1, &texture0);
+    glTextureParameteri(texture0, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTextureParameteri(texture0, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTextureParameteri(texture0, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureParameteri(texture0, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE,
-                 data);
+    glBindTexture(GL_TEXTURE_2D, texture0);
+    const auto& [tex0data, tex0x, tex0y] = *tex0;
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex0x, tex0y, 0, GL_RGB,
+                 GL_UNSIGNED_BYTE, tex0data.get());
 
-    stbi_image_free(data);
+    unsigned int texture1;
+    glCreateTextures(GL_TEXTURE_2D, 1, &texture1);
+    glTextureParameteri(texture1, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTextureParameteri(texture1, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTextureParameteri(texture1, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureParameteri(texture1, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    return {texture_2d};
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    const auto& [tex1data, tex1x, tex1y] = *tex1;
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex1x, tex1y, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, tex1data.get());
+
+    return {{texture0, texture1}};
   };
 
   const auto ground_texture =
-      load_texture(vao, "textures/Grass_ground_Texture.jpg");
+      load_texture_with_paint(vao, "textures/Grass_ground_Texture.jpg");
   if (!ground_texture) {
     std::println(std::cerr, "Could not texture: {}", ground_texture.error());
     glfwTerminate();
     return 1;
   }
+  const auto& [groundTexture, groundPaintTexture] = *ground_texture;
 
-  const auto cube_texture = load_texture(vao, "textures/Glacirno.png");
+  const auto cube_texture =
+      load_texture_with_paint(vao, "textures/Glacirno.png");
   if (!cube_texture) {
     std::println(std::cerr, "Could not texture: {}", cube_texture.error());
+    glfwTerminate();
+    return 1;
+  }
+  const auto& [cubeTexture, cubePaintTexture] = *cube_texture;
+
+  if (!program->SetUniform1i("tex0", 0)) {
+    std::println(std::cerr, "Could not set texture0 uniform");
+    glfwTerminate();
+    return 1;
+  }
+  if (!program->SetUniform1i("tex1", 1)) {
+    std::println(std::cerr, "Could not set texture0 uniform");
     glfwTerminate();
     return 1;
   }
@@ -459,7 +505,10 @@ auto main() -> int {
       glfwTerminate();
       return 1;
     }
-    glBindTexture(GL_TEXTURE_2D, *ground_texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, groundTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, groundPaintTexture);
     plane_mesh->Draw(*program, vao, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -484,7 +533,10 @@ auto main() -> int {
       glfwTerminate();
       return 1;
     }
-    glBindTexture(GL_TEXTURE_2D, *cube_texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, cubeTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, cubePaintTexture);
     cube_mesh->Draw(*program, vao, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glUseProgram(0);
