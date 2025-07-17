@@ -379,13 +379,13 @@ auto main() -> int {
       return {{std::move(tex_data), x, y}};
     };
 
-    auto tex0 = get_image_data(filename, 3);
+    const auto tex0 = get_image_data(filename, 3);
     if (!tex0) {
       return std::unexpected(
           std::format("Coud not load texture '{}'", filename));
     }
 
-    auto tex1 = get_image_data("textures/pink_paint.png", 4);
+    const auto tex1 = get_image_data("textures/pink_paint.png", 4);
     if (!tex1) {
       return std::unexpected(std::format("Coud not load texture '{}'", 1));
     }
@@ -398,10 +398,10 @@ auto main() -> int {
     glTextureParameteri(texture0, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTextureParameteri(texture0, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    glBindTexture(GL_TEXTURE_2D, texture0);
     const auto& [tex0data, tex0x, tex0y] = *tex0;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex0x, tex0y, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, tex0data.get());
+    glTextureStorage2D(texture0, 1, GL_RGB8, tex0x, tex0y);
+    glTextureSubImage2D(texture0, 0, 0, 0, tex0x, tex0y, GL_RGB,
+                        GL_UNSIGNED_BYTE, tex0data.get());
 
     unsigned int texture1;
     glCreateTextures(GL_TEXTURE_2D, 1, &texture1);
@@ -410,10 +410,10 @@ auto main() -> int {
     glTextureParameteri(texture1, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTextureParameteri(texture1, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    glBindTexture(GL_TEXTURE_2D, texture1);
     const auto& [tex1data, tex1x, tex1y] = *tex1;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex1x, tex1y, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, tex1data.get());
+    glTextureStorage2D(texture1, 1, GL_RGBA8, tex1x, tex1y);
+    glTextureSubImage2D(texture1, 0, 0, 0, tex1x, tex1y, GL_RGBA,
+                        GL_UNSIGNED_BYTE, tex1data.get());
 
     return {{texture0, texture1}};
   };
@@ -505,12 +505,12 @@ auto main() -> int {
       glfwTerminate();
       return 1;
     }
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, groundTexture);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, groundPaintTexture);
+
+    glBindTextureUnit(0, groundTexture);
+    glBindTextureUnit(1, groundPaintTexture);
     plane_mesh->Draw(*program, vao, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTextureUnit(0, 0);
+    glBindTextureUnit(1, 0);
 
     const auto rotation = get_rotation(delta_time);
     auto cube_model_matrix = glm::rotate(
@@ -533,12 +533,11 @@ auto main() -> int {
       glfwTerminate();
       return 1;
     }
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, cubeTexture);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, cubePaintTexture);
+    glBindTextureUnit(0, cubeTexture);
+    glBindTextureUnit(1, cubePaintTexture);
     cube_mesh->Draw(*program, vao, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindTextureUnit(0, 0);
+    glBindTextureUnit(1, 0);
     glUseProgram(0);
 
     glfwSwapBuffers(window);
