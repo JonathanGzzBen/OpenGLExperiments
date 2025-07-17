@@ -8,12 +8,7 @@ uniform mat4 mProjection;
 uniform mat4 mView;
 uniform mat4 mModel;
 
-uniform vec3 uColor;
-
-out vec3 vColor;
-
 void main() {
     gl_Position = mProjection * mView * mModel * vec4(vPos, 1.0);
-    vColor = uColor;
 }
 

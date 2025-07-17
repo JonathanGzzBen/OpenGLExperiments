@@ -366,6 +366,7 @@ auto main() -> int {
     return delta_time;
   };
 
+  glEnable(GL_DEPTH_TEST);
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
   // Rendering loop
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
@@ -399,50 +400,16 @@ auto main() -> int {
       return 1;
     }
 
-    glClear(GL_COLOR_BUFFER_BIT);
-    auto plane_model_matrix = glm::mat4(1.0F);
-    plane_model_matrix =
-        glm::translate(plane_model_matrix, glm::vec3(0.0F, -0.5F, 0.0F));
-    plane_model_matrix = glm::rotate(plane_model_matrix, glm::radians(90.0F),
-                                     glm::vec3(1.0F, 0.0F, 0.0F));
-    if (const auto set_m_model_result =
-            program_objects->SetUniformMatrix("mModel", plane_model_matrix);
-        !set_m_model_result) {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // Light color
+    if (const auto set_v_light_color_result = program_objects->SetUniformV3(
+            "lightColor", glm::vec3(1.0F, 1.0F, 1.0F));
+        !set_v_light_color_result) {
       std::cerr << "Failed to set uniform: "
-                << set_m_model_result.error().message << "\n";
+                << set_v_light_color_result.error().message << "\n";
       glfwTerminate();
       return 1;
     }
-    if (const auto set_v_color_result = program_objects->SetUniformV3(
-            "uColor", glm::vec3(0.2F, 0.2F, 0.8F));
-        !set_v_color_result) {
-      std::cerr << "Failed to set uniform: "
-                << set_v_color_result.error().message << "\n";
-      glfwTerminate();
-      return 1;
-    }
-    plane_mesh->Draw(*program_objects, vao, 0);
-
-    // Cube
-    auto cube_model_matrix = glm::mat4(1.0F);
-    if (const auto set_m_model_result =
-            program_objects->SetUniformMatrix("mModel", cube_model_matrix);
-        !set_m_model_result) {
-      std::cerr << "Failed to set uniform: "
-                << set_m_model_result.error().message << "\n";
-      glfwTerminate();
-      return 1;
-    }
-
-    if (const auto set_v_color_result = program_objects->SetUniformV3(
-            "uColor", glm::vec3(0.8F, 0.2F, 0.3F));
-        !set_v_color_result) {
-      std::cerr << "Failed to set uniform: "
-                << set_v_color_result.error().message << "\n";
-      glfwTerminate();
-      return 1;
-    }
-    cube_mesh->Draw(*program_objects, vao, 0);
 
     // Lighting source
     program_lighting->Use();
@@ -477,6 +444,51 @@ auto main() -> int {
       return 1;
     }
     lighting_source_mesh->Draw(*program_lighting, vao, 0);
+
+    // Plane
+    auto plane_model_matrix = glm::mat4(1.0F);
+    plane_model_matrix =
+        glm::translate(plane_model_matrix, glm::vec3(0.0F, -0.5F, 0.0F));
+    plane_model_matrix = glm::rotate(plane_model_matrix, glm::radians(90.0F),
+                                     glm::vec3(1.0F, 0.0F, 0.0F));
+    if (const auto set_m_model_result =
+            program_objects->SetUniformMatrix("mModel", plane_model_matrix);
+        !set_m_model_result) {
+      std::cerr << "Failed to set uniform: "
+                << set_m_model_result.error().message << "\n";
+      glfwTerminate();
+      return 1;
+    }
+    if (const auto set_v_object_color_result = program_objects->SetUniformV3(
+            "objectColor", glm::vec3(0.2F, 0.2F, 0.8F));
+        !set_v_object_color_result) {
+      std::cerr << "Failed to set uniform: "
+                << set_v_object_color_result.error().message << "\n";
+      glfwTerminate();
+      return 1;
+    }
+    plane_mesh->Draw(*program_objects, vao, 0);
+
+    // Cube
+    auto cube_model_matrix = glm::mat4(1.0F);
+    if (const auto set_m_model_result =
+            program_objects->SetUniformMatrix("mModel", cube_model_matrix);
+        !set_m_model_result) {
+      std::cerr << "Failed to set uniform: "
+                << set_m_model_result.error().message << "\n";
+      glfwTerminate();
+      return 1;
+    }
+
+    if (const auto set_v_color_result = program_objects->SetUniformV3(
+            "objectColor", glm::vec3(0.8F, 0.2F, 0.3F));
+        !set_v_color_result) {
+      std::cerr << "Failed to set uniform: "
+                << set_v_color_result.error().message << "\n";
+      glfwTerminate();
+      return 1;
+    }
+    cube_mesh->Draw(*program_objects, vao, 0);
 
     glUseProgram(0);
 

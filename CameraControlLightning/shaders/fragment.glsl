@@ -2,8 +2,9 @@
 
 layout (location = 0) out vec4 fColor;
 
-in vec3 vColor;
+uniform vec3 objectColor;
+uniform vec3 lightColor;
 
 void main() {
-    fColor = vec4(vColor.x, vColor.y, vColor.z, 1.0);
+    fColor = vec4(objectColor * lightColor, 1.0);
 }
