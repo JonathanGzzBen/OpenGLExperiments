@@ -20,6 +20,60 @@ void glfwErrorCallback(const int error, const char* description) {
   std::cerr << "GLFW error: " << description << "\n";
 }
 
+auto get_cube_mesh()
+    -> std::expected<camera_control::Mesh, camera_control::Error> {
+  std::vector<camera_control::Vertex> vertices = {
+
+      {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 0.0f, -1.0f},
+      {0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 0.0f, -1.0f},
+      {0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 0.0f, -1.0f},
+      {0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 0.0f, -1.0f},
+      {-0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 0.0f, -1.0f},
+      {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 0.0f, -1.0f},
+
+      {-0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 0.0f, 1.0f},
+      {0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 0.0f, 1.0f},
+      {0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 0.0f, 1.0f},
+      {0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 0.0f, 1.0f},
+      {-0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 0.0f, 1.0f},
+      {-0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 0.0f, 1.0f},
+
+      {-0.5f, 0.5f, 0.5f, 0.0F, 0.0F, -1.0f, 0.0f, 0.0f},
+      {-0.5f, 0.5f, -0.5f, 0.0F, 0.0F, -1.0f, 0.0f, 0.0f},
+      {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, -1.0f, 0.0f, 0.0f},
+      {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, -1.0f, 0.0f, 0.0f},
+      {-0.5f, -0.5f, 0.5f, 0.0F, 0.0F, -1.0f, 0.0f, 0.0f},
+      {-0.5f, 0.5f, 0.5f, 0.0F, 0.0F, -1.0f, 0.0f, 0.0f},
+
+      {0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 1.0f, 0.0f, 0.0f},
+      {0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 1.0f, 0.0f, 0.0f},
+      {0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 1.0f, 0.0f, 0.0f},
+      {0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 1.0f, 0.0f, 0.0f},
+      {0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 1.0f, 0.0f, 0.0f},
+      {0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 1.0f, 0.0f, 0.0f},
+
+      {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
+      {0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
+      {0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
+      {0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
+      {-0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
+      {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
+
+      {-0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 1.0f, 0.0f},
+      {0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 1.0f, 0.0f},
+      {0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 1.0f, 0.0f},
+      {0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 1.0f, 0.0f},
+      {-0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 1.0f, 0.0f},
+      {-0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 1.0f, 0.0f}
+
+  };
+  std::vector<unsigned int> indices;
+  for (unsigned int i = 0; i < vertices.size(); i++) {
+    indices.emplace_back(i);
+  }
+  return camera_control::Mesh::Create(vertices, indices);
+};
+
 auto main() -> int {
   if (glfwInit() != GLFW_TRUE) {
     std::cerr << "Failed to initialize!\n";
@@ -93,123 +147,6 @@ auto main() -> int {
                             offsetof(camera_control::Vertex, u));
   glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE,
                             offsetof(camera_control::Vertex, nx));
-
-  const auto get_cube_mesh = []() {
-    std::vector<camera_control::Vertex> vertices = {
-        // Front face
-        {.x = -0.5F,
-         .y = -0.5F,
-         .z = 0.5F,
-         .u = 0.0F,
-         .v = 0.0F,
-         .nx = 0.0F,
-         .ny = 0.0F,
-         .nz = 0.0F},
-        {.x = -0.5F,
-         .y = 0.5F,
-         .z = 0.5F,
-         .u = 0.0F,
-         .v = 0.0F,
-         .nx = 0.0F,
-         .ny = 0.0F,
-         .nz = 0.0F},
-        {.x = 0.5F,
-         .y = 0.5F,
-         .z = 0.5F,
-         .u = 0.0F,
-         .v = 0.0F,
-         .nx = 0.0F,
-         .ny = 0.0F,
-         .nz = 0.0F},
-        {.x = 0.5F,
-         .y = -0.5F,
-         .z = 0.5F,
-         .u = 0.0F,
-         .v = 0.0F,
-         .nx = 0.0F,
-         .ny = 0.0F,
-         .nz = 0.0F},
-
-        // Back face
-        {.x = -0.5F,
-         .y = -0.5F,
-         .z = -0.5F,
-         .u = 0.0F,
-         .v = 0.0F,
-         .nx = 0.0F,
-         .ny = 0.0F,
-         .nz = 0.0F},
-        {.x = -0.5F,
-         .y = 0.5F,
-         .z = -0.5F,
-         .u = 0.0F,
-         .v = 0.0F,
-         .nx = 0.0F,
-         .ny = 0.0F,
-         .nz = 0.0F},
-        {.x = 0.5F,
-         .y = 0.5F,
-         .z = -0.5F,
-         .u = 0.0F,
-         .v = 0.0F,
-         .nx = 0.0F,
-         .ny = 0.0F,
-         .nz = 0.0F},
-        {.x = 0.5F,
-         .y = -0.5F,
-         .z = -0.5F,
-         .u = 0.0F,
-         .v = 0.0F,
-         .nx = 0.0F,
-         .ny = 0.0F,
-         .nz = 0.0F},
-    };
-    const std::vector<unsigned int> indices = {
-        // Front face
-        0,
-        1,
-        2,
-        2,
-        3,
-        0,
-        // Back face
-        4,
-        5,
-        6,
-        6,
-        7,
-        4,
-        // Left face
-        4,
-        5,
-        1,
-        1,
-        0,
-        4,
-        // Right face
-        3,
-        2,
-        6,
-        6,
-        7,
-        3,
-        // Upper face
-        1,
-        5,
-        6,
-        6,
-        2,
-        1,
-        // Lower face
-        4,
-        0,
-        3,
-        3,
-        7,
-        4,
-    };
-    return camera_control::Mesh::Create(vertices, indices);
-  };
 
   const auto cube_mesh = get_cube_mesh();
 
