@@ -168,36 +168,36 @@ auto main() -> int {
   const auto plane_mesh = []() {
     const std::vector<camera_control::Vertex> vertices = {
         {.x = -1.0F,
-         .y = -1.0F,
-         .z = 0.0F,
+         .y = 0.0F,
+         .z = 1.0F,
          .u = 0.0F,
          .v = 0.0F,
          .nx = 0.0F,
-         .ny = 0.0F,
+         .ny = 1.0F,
          .nz = 0.0F},
         {.x = -1.0F,
-         .y = 1.0F,
-         .z = 0.0F,
+         .y = 0.0F,
+         .z = -1.0F,
          .u = 0.0F,
          .v = 0.0F,
          .nx = 0.0F,
-         .ny = 0.0F,
+         .ny = 1.0F,
          .nz = 0.0F},
         {.x = 1.0F,
-         .y = 1.0F,
-         .z = 0.0F,
+         .y = 0.0F,
+         .z = -1.0F,
          .u = 0.0F,
          .v = 0.0F,
          .nx = 0.0F,
-         .ny = 0.0F,
+         .ny = 1.0F,
          .nz = 0.0F},
         {.x = 1.0F,
-         .y = -1.0F,
-         .z = 0.0F,
+         .y = 0.0F,
+         .z = 1.0F,
          .u = 0.0F,
          .v = 0.0F,
          .nx = 0.0F,
-         .ny = 0.0F,
+         .ny = 1.0F,
          .nz = 0.0F},
     };
     const std::vector<unsigned int> indices = {
@@ -307,13 +307,23 @@ auto main() -> int {
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
 
   if (const auto set_light_position_result = program_objects->SetUniformV3(
-          "lightPosition", glm::vec3(0.8F, 0.8F, 0.8F));
+          "lightPosition", glm::vec3(0.8F, 0.8F, 1.5F));
       !set_light_position_result) {
     std::cerr << "Failed to set uniform: "
               << set_light_position_result.error().message << "\n";
     glfwTerminate();
     return 1;
   }
+
+  program_objects->SetUniformV3("material.ambient",
+                                glm::vec3(1.0f, 0.5f, 0.31f));
+  program_objects->SetUniformV3("material.diffuse",
+                                glm::vec3(1.0f, 0.5f, 0.31f));
+  program_objects->SetUniformV3("material.specular",
+                                glm::vec3(0.5f, 0.5f, 0.5f));
+  program_objects->SetUniformV3("light.ambient", glm::vec3(0.2F, 0.2F, 0.2F));
+  program_objects->SetUniformV3("light.diffuse", glm::vec3(0.5F, 0.5F, 0.5F));
+  program_objects->SetUniformV3("light.specular", glm::vec3(1.0F, 1.0F, 1.0F));
 
   // Rendering loop
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
@@ -357,15 +367,6 @@ auto main() -> int {
     }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // Light color
-    if (const auto set_v_light_color_result = program_objects->SetUniformV3(
-            "lightColor", glm::vec3(1.0F, 1.0F, 1.0F));
-        !set_v_light_color_result) {
-      std::cerr << "Failed to set uniform: "
-                << set_v_light_color_result.error().message << "\n";
-      glfwTerminate();
-      return 1;
-    }
 
     // Lighting source
     program_lighting->Use();
@@ -405,21 +406,11 @@ auto main() -> int {
     auto plane_model_matrix = glm::mat4(1.0F);
     plane_model_matrix =
         glm::translate(plane_model_matrix, glm::vec3(0.0F, -0.5F, 0.0F));
-    plane_model_matrix = glm::rotate(plane_model_matrix, glm::radians(90.0F),
-                                     glm::vec3(1.0F, 0.0F, 0.0F));
     if (const auto set_m_model_result =
             program_objects->SetUniformMatrix("mModel", plane_model_matrix);
         !set_m_model_result) {
       std::cerr << "Failed to set uniform: "
                 << set_m_model_result.error().message << "\n";
-      glfwTerminate();
-      return 1;
-    }
-    if (const auto set_v_object_color_result = program_objects->SetUniformV3(
-            "objectColor", glm::vec3(0.2F, 0.2F, 0.8F));
-        !set_v_object_color_result) {
-      std::cerr << "Failed to set uniform: "
-                << set_v_object_color_result.error().message << "\n";
       glfwTerminate();
       return 1;
     }
@@ -436,14 +427,6 @@ auto main() -> int {
       return 1;
     }
 
-    if (const auto set_v_color_result = program_objects->SetUniformV3(
-            "objectColor", glm::vec3(0.8F, 0.2F, 0.3F));
-        !set_v_color_result) {
-      std::cerr << "Failed to set uniform: "
-                << set_v_color_result.error().message << "\n";
-      glfwTerminate();
-      return 1;
-    }
     cube_mesh->Draw(*program_objects, vao, 0);
 
     glUseProgram(0);
