@@ -117,4 +117,18 @@ auto Program::SetUniformV3(const std::string& uniform_name,
   glUseProgram(0);
   return {};
 }
+auto Program::SetUniform1F(const std::string& uniform_name, const float f) const
+    -> std::expected<void, Error> {
+  glUseProgram(program_id_);
+  const auto location = glGetUniformLocation(program_id_, uniform_name.c_str());
+  if (location == -1) {
+    return std::unexpected(
+        Error{.message = std::format("Could not get uniform location of '{}'",
+                                     uniform_name)});
+  }
+  glUniform1f(location, f);
+  glUseProgram(0);
+  return {};
+
+}
 }  // namespace camera_control

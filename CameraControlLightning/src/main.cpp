@@ -321,6 +321,7 @@ auto main() -> int {
                                 glm::vec3(1.0f, 0.5f, 0.31f));
   program_objects->SetUniformV3("material.specular",
                                 glm::vec3(0.5f, 0.5f, 0.5f));
+  program_objects->SetUniform1F("material.shininess", 32.0F);
   program_objects->SetUniformV3("light.ambient", glm::vec3(0.2F, 0.2F, 0.2F));
   program_objects->SetUniformV3("light.diffuse", glm::vec3(0.5F, 0.5F, 0.5F));
   program_objects->SetUniformV3("light.specular", glm::vec3(1.0F, 1.0F, 1.0F));

@@ -51,6 +51,11 @@ public:
                            const glm::vec3& vec) const ->
     std::expected<
       void, Error>;
+
+  [[nodiscard]] auto SetUniform1F(const std::string& uniform_name,
+                           const float f) const ->
+    std::expected<
+      void, Error>;
 };
 } // namespace camera_control
 
