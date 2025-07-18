@@ -269,7 +269,7 @@ auto main() -> int {
     }
 
     // Camera rotation
-    static constexpr auto rotation_speed = 10.0F;
+    static constexpr auto rotation_speed = 40.0F;
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
       pitch -= rotation_speed * delta_time;
       if (pitch <= -90.0F) {
