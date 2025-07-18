@@ -85,6 +85,8 @@ target_link_libraries(${camera_control_lib} PUBLIC GLEW::GLEW)
 set_target_properties(${camera_control_lib} PROPERTIES CXX_STANDARD 23)
 set_target_properties(${camera_control_lib} PROPERTIES CXX_STANDARD_REQUIRED ON)
 
+find_package(Stb REQUIRED)
+
 if (MSVC)
     message(STATUS "Adding /bigobj compiler flag for MSVC.")
     target_compile_options(${camera_control_lib} PUBLIC /bigobj)
@@ -95,6 +97,6 @@ add_executable(${camera_control} src/main.cpp
         lib/camera_control/include/program.h)
 
 target_link_libraries(${camera_control} ${camera_control_lib} glfw GLEW::GLEW glm::glm CLI11::CLI11)
-target_include_directories(${camera_control} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(${camera_control} PRIVATE ${CMAKE_SOURCE_DIR}/include ${Stb_INCLUDE_DIR})
 set_target_properties(${camera_control} PROPERTIES CXX_STANDARD 23)
 set_target_properties(${camera_control} PROPERTIES CXX_STANDARD_REQUIRED ON)

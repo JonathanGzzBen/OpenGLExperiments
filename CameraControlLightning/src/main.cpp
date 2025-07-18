@@ -1,5 +1,7 @@
+#define STB_IMAGE_IMPLEMENTATION
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <stb_image.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
@@ -20,37 +22,75 @@ void glfwErrorCallback(const int error, const char* description) {
   std::cerr << "GLFW error: " << description << "\n";
 }
 
+auto get_image_data(const std::string& filename, int n_components)
+    -> std::expected<
+        std::tuple<std::unique_ptr<unsigned char, decltype(&stbi_image_free)>,
+                   int, int>,
+        std::string> {
+  int x, y, n;
+  unsigned char* data = stbi_load(filename.c_str(), &x, &y, &n, n_components);
+  if (data == nullptr) {
+    return std::unexpected(std::format("Could not load texture '{}': {}",
+                                       filename, stbi_failure_reason()));
+  }
+
+  std::unique_ptr<unsigned char, decltype(&stbi_image_free)> tex_data(
+      data, &stbi_image_free);
+  return {{std::move(tex_data), x, y}};
+};
+
+auto get_texture(const std::string& filename)
+    -> std::expected<unsigned int, std::string> {
+  const auto image_data = get_image_data(filename, 3);
+  if (!image_data) {
+    return std::unexpected(std::format("Could not load texture '{}': {}",
+                                       filename, image_data.error()));
+  }
+  const auto& [data, width, height] = *image_data;
+
+  unsigned int texture0;
+  glCreateTextures(GL_TEXTURE_2D, 1, &texture0);
+  glTextureStorage2D(texture0, 1, GL_RGB8, width, height);
+  glTextureParameteri(texture0, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTextureParameteri(texture0, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTextureParameteri(texture0, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTextureParameteri(texture0, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTextureSubImage2D(texture0, 0, 0, 0, width, height, GL_RGB,
+                      GL_UNSIGNED_BYTE, data.get());
+  return {texture0};
+}
+
 auto get_cube_mesh()
     -> std::expected<camera_control::Mesh, camera_control::Error> {
   std::vector<camera_control::Vertex> vertices = {
 
       {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 0.0f, -1.0f},
-      {0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 0.0f, -1.0f},
-      {0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 0.0f, -1.0f},
-      {0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 0.0f, -1.0f},
-      {-0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 0.0f, -1.0f},
+      {0.5f, -0.5f, -0.5f, 1.0F, 0.0F, 0.0f, 0.0f, -1.0f},
+      {0.5f, 0.5f, -0.5f, 1.0F, 1.0F, 0.0f, 0.0f, -1.0f},
+      {0.5f, 0.5f, -0.5f, 1.0F, 1.0F, 0.0f, 0.0f, -1.0f},
+      {-0.5f, 0.5f, -0.5f, 0.0F, 1.0F, 0.0f, 0.0f, -1.0f},
       {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 0.0f, -1.0f},
 
       {-0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 0.0f, 1.0f},
-      {0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 0.0f, 1.0f},
-      {0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 0.0f, 1.0f},
-      {0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 0.0f, 1.0f},
-      {-0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 0.0f, 1.0f},
+      {0.5f, -0.5f, 0.5f, 1.0F, 0.0F, 0.0f, 0.0f, 1.0f},
+      {0.5f, 0.5f, 0.5f, 1.0F, 1.0F, 0.0f, 0.0f, 1.0f},
+      {0.5f, 0.5f, 0.5f, 1.0F, 1.0F, 0.0f, 0.0f, 1.0f},
+      {-0.5f, 0.5f, 0.5f, 0.0F, 1.0F, 0.0f, 0.0f, 1.0f},
       {-0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 0.0f, 1.0f},
 
-      {-0.5f, 0.5f, 0.5f, 0.0F, 0.0F, -1.0f, 0.0f, 0.0f},
-      {-0.5f, 0.5f, -0.5f, 0.0F, 0.0F, -1.0f, 0.0f, 0.0f},
-      {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, -1.0f, 0.0f, 0.0f},
-      {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, -1.0f, 0.0f, 0.0f},
+      {-0.5f, 0.5f, 0.5f, 1.0F, 0.0F, -1.0f, 0.0f, 0.0f},
+      {-0.5f, 0.5f, -0.5f, 1.0F, 1.0F, -1.0f, 0.0f, 0.0f},
+      {-0.5f, -0.5f, -0.5f, 0.0F, 1.0F, -1.0f, 0.0f, 0.0f},
+      {-0.5f, -0.5f, -0.5f, 0.0F, 1.0F, -1.0f, 0.0f, 0.0f},
       {-0.5f, -0.5f, 0.5f, 0.0F, 0.0F, -1.0f, 0.0f, 0.0f},
-      {-0.5f, 0.5f, 0.5f, 0.0F, 0.0F, -1.0f, 0.0f, 0.0f},
+      {-0.5f, 0.5f, 0.5f, 1.0F, 0.0F, -1.0f, 0.0f, 0.0f},
 
-      {0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 1.0f, 0.0f, 0.0f},
-      {0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 1.0f, 0.0f, 0.0f},
-      {0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 1.0f, 0.0f, 0.0f},
-      {0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 1.0f, 0.0f, 0.0f},
+      {0.5f, 0.5f, 0.5f, 1.0F, 0.0F, 1.0f, 0.0f, 0.0f},
+      {0.5f, 0.5f, -0.5f, 1.0F, 1.0F, 1.0f, 0.0f, 0.0f},
+      {0.5f, -0.5f, -0.5f, 0.0F, 1.0F, 1.0f, 0.0f, 0.0f},
+      {0.5f, -0.5f, -0.5f, 0.0F, 1.0F, 1.0f, 0.0f, 0.0f},
       {0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 1.0f, 0.0f, 0.0f},
-      {0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 1.0f, 0.0f, 0.0f},
+      {0.5f, 0.5f, 0.5f, 1.0F, 0.0F, 1.0f, 0.0f, 0.0f},
 
       {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
       {0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
@@ -59,12 +99,12 @@ auto get_cube_mesh()
       {-0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
       {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
 
-      {-0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 1.0f, 0.0f},
-      {0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 1.0f, 0.0f},
-      {0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 1.0f, 0.0f},
-      {0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 1.0f, 0.0f},
+      {-0.5f, 0.5f, -0.5f, 0.0F, 1.0F, 0.0f, 1.0f, 0.0f},
+      {0.5f, 0.5f, -0.5f, 1.0F, 1.0F, 0.0f, 1.0f, 0.0f},
+      {0.5f, 0.5f, 0.5f, 1.0F, 0.0F, 0.0f, 1.0f, 0.0f},
+      {0.5f, 0.5f, 0.5f, 1.0F, 0.0F, 0.0f, 1.0f, 0.0f},
       {-0.5f, 0.5f, 0.5f, 0.0F, 0.0F, 0.0f, 1.0f, 0.0f},
-      {-0.5f, 0.5f, -0.5f, 0.0F, 0.0F, 0.0f, 1.0f, 0.0f}
+      {-0.5f, 0.5f, -0.5f, 0.0F, 1.0F, 0.0f, 1.0f, 0.0f}
 
   };
   std::vector<unsigned int> indices;
@@ -319,14 +359,21 @@ auto main() -> int {
 
   program_objects->SetUniformV3("material.ambient",
                                 glm::vec3(1.0f, 0.5f, 0.31f));
-  program_objects->SetUniformV3("material.diffuse",
-                                glm::vec3(1.0f, 0.5f, 0.31f));
+  constexpr int diffuse_texture_unit = 0;
+  program_objects->SetUniform1I("material.diffuse", diffuse_texture_unit);
   program_objects->SetUniformV3("material.specular",
                                 glm::vec3(0.5f, 0.5f, 0.5f));
   program_objects->SetUniform1F("material.shininess", 32.0F);
   program_objects->SetUniformV3("light.ambient", glm::vec3(0.2F, 0.2F, 0.2F));
   program_objects->SetUniformV3("light.diffuse", glm::vec3(0.5F, 0.5F, 0.5F));
   program_objects->SetUniformV3("light.specular", glm::vec3(1.0F, 1.0F, 1.0F));
+
+  auto texture = get_texture("textures/container2.png");
+  if (!texture) {
+    std::cerr << "Failed to load texture: " << texture.error() << "\n";
+    glfwTerminate();
+    return 1;
+  }
 
   // Rendering loop
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
@@ -405,20 +452,6 @@ auto main() -> int {
     }
     lighting_source_mesh->Draw(*program_lighting, vao, 0);
 
-    // Plane
-    auto plane_model_matrix = glm::mat4(1.0F);
-    plane_model_matrix =
-        glm::translate(plane_model_matrix, glm::vec3(0.0F, -0.5F, 0.0F));
-    if (const auto set_m_model_result =
-            program_objects->SetUniformMatrix("mModel", plane_model_matrix);
-        !set_m_model_result) {
-      std::cerr << "Failed to set uniform: "
-                << set_m_model_result.error().message << "\n";
-      glfwTerminate();
-      return 1;
-    }
-    plane_mesh->Draw(*program_objects, vao, 0);
-
     // Cube
     auto cube_model_matrix = glm::mat4(1.0F);
     if (const auto set_m_model_result =
@@ -430,7 +463,9 @@ auto main() -> int {
       return 1;
     }
 
+    glBindTextureUnit(diffuse_texture_unit, *texture);
     cube_mesh->Draw(*program_objects, vao, 0);
+    glBindTextureUnit(diffuse_texture_unit, 0);
 
     glUseProgram(0);
 

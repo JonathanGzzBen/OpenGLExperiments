@@ -56,6 +56,11 @@ public:
                            const float f) const ->
     std::expected<
       void, Error>;
+
+  [[nodiscard]] auto SetUniform1I(const std::string& uniform_name,
+                           const int i) const ->
+    std::expected<
+      void, Error>;
 };
 } // namespace camera_control
 
