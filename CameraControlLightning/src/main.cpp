@@ -320,6 +320,15 @@ auto main() -> int {
     const auto delta_time = static_cast<float>(get_delta());
     handle_input(delta_time);
 
+    if (const auto set_v_view_pos_result =
+            program_objects->SetUniformV3("viewPos", camera_position);
+        !set_v_view_pos_result) {
+      std::cerr << "Failed to set uniform: "
+                << set_v_view_pos_result.error().message << "\n";
+      glfwTerminate();
+      return 1;
+    }
+
     const auto projection_matrix = glm::perspective(
         glm::radians(45.0F), window_status.aspect_ratio, 0.1F, 100.0F);
     if (const auto set_m_projection_result =
