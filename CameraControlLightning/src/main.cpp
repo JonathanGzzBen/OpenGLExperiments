@@ -306,8 +306,10 @@ auto main() -> int {
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
 
-  if (const auto set_light_position_result = program_objects->SetUniformV3(
-          "lightPosition", glm::vec3(0.8F, 0.8F, 1.5F));
+  constexpr auto light_source_position = glm::vec3(0.3F, 0.9F, 0.8F);
+
+  if (const auto set_light_position_result =
+          program_objects->SetUniformV3("lightPosition", light_source_position);
       !set_light_position_result) {
     std::cerr << "Failed to set uniform: "
               << set_light_position_result.error().message << "\n";
@@ -388,8 +390,8 @@ auto main() -> int {
       return 1;
     }
     auto lighting_source_model_matrix = glm::mat4(1.0F);
-    lighting_source_model_matrix = glm::translate(lighting_source_model_matrix,
-                                                  glm::vec3(0.8F, 0.8F, 0.8F));
+    lighting_source_model_matrix =
+        glm::translate(lighting_source_model_matrix, light_source_position);
     lighting_source_model_matrix = glm::scale(lighting_source_model_matrix,
                                               glm::vec3(0.25F, 0.25F, 0.25F));
 
