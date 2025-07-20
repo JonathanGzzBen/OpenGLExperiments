@@ -346,16 +346,21 @@ auto main() -> int {
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
 
-  static constexpr auto light_direction = glm::vec3(-0.2F, -1.0F, -0.3F);
-  constexpr auto light_source_position = -light_direction * 10.0F;
+  // static constexpr auto light_direction = glm::vec3(-0.2F, -1.0F, -0.3F);
+  static constexpr auto light_position = glm::vec3(0.2F, 1.0F, 0.3F);
+  constexpr auto light_source_position = light_position;
   if (const auto set_light_position_result =
-          program_objects->SetUniformV3("light.direction", light_direction);
+          program_objects->SetUniformV3("light.position", light_position);
       !set_light_position_result) {
     std::cerr << "Failed to set uniform: "
               << set_light_position_result.error().message << "\n";
     glfwTerminate();
     return 1;
   }
+
+  program_objects->SetUniform1F("light.constant", 1.0F);
+  program_objects->SetUniform1F("light.linear", 0.09F);
+  program_objects->SetUniform1F("light.quadratic", 0.032F);
 
   program_objects->SetUniformV3("material.ambient",
                                 glm::vec3(1.0f, 0.5f, 0.31f));
