@@ -12,7 +12,7 @@ in vec2 texCoords;
 
 struct Material {
     sampler2D diffuse;
-    vec3 specular;
+    sampler2D specular;
     float shininess;
 };
 
@@ -41,7 +41,7 @@ void main() {
     vec3 viewDir = normalize(viewPos - fragPos);
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(reflectDir, viewDir), 0.0), material.shininess);
-    vec3 specular = light.specular * (material.specular * spec);
+    vec3 specular = light.specular * spec * vec3(texture(material.specular, texCoords));
 
     vec3 result = (ambient + diffuse + specular);
     fColor = vec4(result, 1.0);

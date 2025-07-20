@@ -48,16 +48,16 @@ auto get_texture(const std::string& filename)
   }
   const auto& [data, width, height] = *image_data;
 
-  unsigned int texture0;
-  glCreateTextures(GL_TEXTURE_2D, 1, &texture0);
-  glTextureStorage2D(texture0, 1, GL_RGB8, width, height);
-  glTextureParameteri(texture0, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTextureParameteri(texture0, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTextureParameteri(texture0, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTextureParameteri(texture0, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTextureSubImage2D(texture0, 0, 0, 0, width, height, GL_RGB,
-                      GL_UNSIGNED_BYTE, data.get());
-  return {texture0};
+  unsigned int texture;
+  glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+  glTextureStorage2D(texture, 1, GL_RGB8, width, height);
+  glTextureParameteri(texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTextureParameteri(texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE,
+                      data.get());
+  return {texture};
 }
 
 auto get_cube_mesh()
@@ -360,9 +360,11 @@ auto main() -> int {
   program_objects->SetUniformV3("material.ambient",
                                 glm::vec3(1.0f, 0.5f, 0.31f));
   constexpr int diffuse_texture_unit = 0;
+  constexpr int specular_texture_unit = 1;
   program_objects->SetUniform1I("material.diffuse", diffuse_texture_unit);
-  program_objects->SetUniformV3("material.specular",
-                                glm::vec3(0.5f, 0.5f, 0.5f));
+  program_objects->SetUniform1I("material.specular", specular_texture_unit);
+  // program_objects->SetUniformV3("material.specular",
+  //                               glm::vec3(0.5f, 0.5f, 0.5f));
   program_objects->SetUniform1F("material.shininess", 32.0F);
   program_objects->SetUniformV3("light.ambient", glm::vec3(0.2F, 0.2F, 0.2F));
   program_objects->SetUniformV3("light.diffuse", glm::vec3(0.5F, 0.5F, 0.5F));
@@ -371,6 +373,12 @@ auto main() -> int {
   auto texture = get_texture("textures/container2.png");
   if (!texture) {
     std::cerr << "Failed to load texture: " << texture.error() << "\n";
+    glfwTerminate();
+    return 1;
+  }
+  auto texture_specular = get_texture("textures/container2_specular.png");
+  if (!texture_specular) {
+    std::cerr << "Failed to load texture_specular: " << texture.error() << "\n";
     glfwTerminate();
     return 1;
   }
@@ -464,8 +472,10 @@ auto main() -> int {
     }
 
     glBindTextureUnit(diffuse_texture_unit, *texture);
+    glBindTextureUnit(specular_texture_unit, *texture_specular);
     cube_mesh->Draw(*program_objects, vao, 0);
     glBindTextureUnit(diffuse_texture_unit, 0);
+    glBindTextureUnit(specular_texture_unit, 0);
 
     glUseProgram(0);
 
