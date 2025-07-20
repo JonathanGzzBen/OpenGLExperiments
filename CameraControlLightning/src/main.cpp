@@ -92,12 +92,12 @@ auto get_cube_mesh()
       {0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 1.0f, 0.0f, 0.0f},
       {0.5f, 0.5f, 0.5f, 1.0F, 0.0F, 1.0f, 0.0f, 0.0f},
 
-      {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
-      {0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
-      {0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
-      {0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
+      {-0.5f, -0.5f, -0.5f, 0.0F, 1.0F, 0.0f, -1.0f, 0.0f},
+      {0.5f, -0.5f, -0.5f, 1.0F, 1.0F, 0.0f, -1.0f, 0.0f},
+      {0.5f, -0.5f, 0.5f, 1.0F, 0.0F, 0.0f, -1.0f, 0.0f},
+      {0.5f, -0.5f, 0.5f, 1.0F, 0.0F, 0.0f, -1.0f, 0.0f},
       {-0.5f, -0.5f, 0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
-      {-0.5f, -0.5f, -0.5f, 0.0F, 0.0F, 0.0f, -1.0f, 0.0f},
+      {-0.5f, -0.5f, -0.5f, 0.0F, 1.0F, 0.0f, -1.0f, 0.0f},
 
       {-0.5f, 0.5f, -0.5f, 0.0F, 1.0F, 0.0f, 1.0f, 0.0f},
       {0.5f, 0.5f, -0.5f, 1.0F, 1.0F, 0.0f, 1.0f, 0.0f},
@@ -346,10 +346,10 @@ auto main() -> int {
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
 
-  constexpr auto light_source_position = glm::vec3(0.3F, 0.9F, 0.8F);
-
+  static constexpr auto light_direction = glm::vec3(-0.2F, -1.0F, -0.3F);
+  constexpr auto light_source_position = -light_direction * 10.0F;
   if (const auto set_light_position_result =
-          program_objects->SetUniformV3("lightPosition", light_source_position);
+          program_objects->SetUniformV3("light.direction", light_direction);
       !set_light_position_result) {
     std::cerr << "Failed to set uniform: "
               << set_light_position_result.error().message << "\n";
@@ -382,6 +382,13 @@ auto main() -> int {
     glfwTerminate();
     return 1;
   }
+
+  glm::vec3 cubePositions[] = {
+      glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
+      glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
+      glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
+      glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
+      glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
 
   // Rendering loop
   while (glfwWindowShouldClose(window) != GLFW_TRUE) {
@@ -460,22 +467,28 @@ auto main() -> int {
     }
     lighting_source_mesh->Draw(*program_lighting, vao, 0);
 
-    // Cube
-    auto cube_model_matrix = glm::mat4(1.0F);
-    if (const auto set_m_model_result =
-            program_objects->SetUniformMatrix("mModel", cube_model_matrix);
-        !set_m_model_result) {
-      std::cerr << "Failed to set uniform: "
-                << set_m_model_result.error().message << "\n";
-      glfwTerminate();
-      return 1;
-    }
+    // Cubes
+    for (size_t i = 0; i < std::size(cubePositions); i++) {
+      auto cube_model_matrix = glm::mat4(1.0F);
+      cube_model_matrix = glm::translate(cube_model_matrix, cubePositions[i]);
+      float angle = 20.0f * i;
+      cube_model_matrix = glm::rotate(cube_model_matrix, glm::radians(angle),
+                                      glm::vec3(1.0f, 0.3f, 0.5f));
+      if (const auto set_m_model_result =
+              program_objects->SetUniformMatrix("mModel", cube_model_matrix);
+          !set_m_model_result) {
+        std::cerr << "Failed to set uniform: "
+                  << set_m_model_result.error().message << "\n";
+        glfwTerminate();
+        return 1;
+      }
 
-    glBindTextureUnit(diffuse_texture_unit, *texture);
-    glBindTextureUnit(specular_texture_unit, *texture_specular);
-    cube_mesh->Draw(*program_objects, vao, 0);
-    glBindTextureUnit(diffuse_texture_unit, 0);
-    glBindTextureUnit(specular_texture_unit, 0);
+      glBindTextureUnit(diffuse_texture_unit, *texture);
+      glBindTextureUnit(specular_texture_unit, *texture_specular);
+      cube_mesh->Draw(*program_objects, vao, 0);
+      glBindTextureUnit(diffuse_texture_unit, 0);
+      glBindTextureUnit(specular_texture_unit, 0);
+    }
 
     glUseProgram(0);
 
