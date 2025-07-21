@@ -1,5 +1,5 @@
 {
-  "name" : "camera-control",
+  "name" : "model-loading",
   "version-string" : "1.0.0",
   "builtin-baseline" : "031ad89ce6c575df35a8e58707ad2c898446c63e",
   "dependencies" : [ {
@@ -17,5 +17,8 @@
   }, {
     "name" : "stb",
     "version>=" : "2024-07-29#1"
+  }, {
+    "name" : "assimp",
+    "version>=" : "6.0.2#1"
   } ]
 }

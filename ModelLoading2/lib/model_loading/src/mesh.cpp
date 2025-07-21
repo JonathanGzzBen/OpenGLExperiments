@@ -1,18 +1,18 @@
 #include  "mesh.h"
 
-camera_control::Mesh::Mesh(const unsigned int vbo, const unsigned int ebo,
+model_loading::Mesh::Mesh(const unsigned int vbo, const unsigned int ebo,
                      const size_t indices_count): vbo(vbo),
                                                   ebo(ebo),
                                                   indices_count(indices_count) {
 }
 
-camera_control::Mesh::Mesh(Mesh&& other) noexcept {
+model_loading::Mesh::Mesh(Mesh&& other) noexcept {
   std::swap(vbo, other.vbo);
   std::swap(ebo, other.ebo);
   std::swap(indices_count, other.indices_count);
 }
 
-camera_control::Mesh::~Mesh() {
+model_loading::Mesh::~Mesh() {
   if (glIsBuffer(vbo)) {
     glDeleteBuffers(1, &vbo);
   }
@@ -21,7 +21,7 @@ camera_control::Mesh::~Mesh() {
   }
 }
 
-auto camera_control::Mesh::Create(const std::vector<Vertex>& vertices,
+auto model_loading::Mesh::Create(const std::vector<Vertex>& vertices,
                             const std::vector<unsigned int>& indices) ->
   std::expected<Mesh, Error> {
   unsigned int vbo;
@@ -40,7 +40,7 @@ auto camera_control::Mesh::Create(const std::vector<Vertex>& vertices,
   return {Mesh(vbo, ebo, indices.size())};
 }
 
-auto camera_control::Mesh::Draw(const Program& program, const unsigned int vao,
+auto model_loading::Mesh::Draw(const Program& program, const unsigned int vao,
                           const unsigned int binding_index) const -> void {
   program.Use();
   glBindVertexArray(vao);

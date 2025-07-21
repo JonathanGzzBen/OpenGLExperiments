@@ -76,20 +76,22 @@ else ()
 endif ()
 
 add_library(model_loading_lib STATIC
-        lib/camera_control/src/program.cpp
-        lib/camera_control/src/mesh.cpp)
+        lib/model_loading/src/program.cpp
+        lib/model_loading/src/mesh.cpp)
 target_include_directories(model_loading_lib PUBLIC
-        ${CMAKE_SOURCE_DIR}/lib/camera_control/include)
+        ${CMAKE_SOURCE_DIR}/lib/model_loading/include)
 target_link_libraries(model_loading_lib PUBLIC GLEW::GLEW)
 set_target_properties(model_loading_lib PROPERTIES CXX_STANDARD 23)
 set_target_properties(model_loading_lib PROPERTIES CXX_STANDARD_REQUIRED ON)
 
 find_package(Stb REQUIRED)
 
-add_executable(model_loading src/main.cpp
-        lib/camera_control/include/program.h)
+find_package(assimp CONFIG REQUIRED)
 
-target_link_libraries(model_loading model_loading_lib glfw GLEW::GLEW glm::glm CLI11::CLI11)
+add_executable(model_loading src/main.cpp
+        lib/model_loading/include/program.h)
+
+target_link_libraries(model_loading model_loading_lib glfw GLEW::GLEW glm::glm CLI11::CLI11 assimp::assimp)
 target_include_directories(model_loading PRIVATE ${CMAKE_SOURCE_DIR}/include ${Stb_INCLUDE_DIR})
 set_target_properties(model_loading PROPERTIES CXX_STANDARD 23)
 set_target_properties(model_loading PROPERTIES CXX_STANDARD_REQUIRED ON)

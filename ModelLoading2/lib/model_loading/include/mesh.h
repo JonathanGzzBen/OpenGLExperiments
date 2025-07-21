@@ -9,7 +9,7 @@
 #include "error.h"
 #include "program.h"
 
-namespace camera_control {
+namespace model_loading {
 using Vertex = struct Vertex {
   float x, y, z, u, v, nx, ny, nz;
 };
@@ -43,6 +43,6 @@ public:
       const unsigned int vao,
       const unsigned int binding_index) const -> void;
 };
-} // namespace camera_control
+} // namespace model_loading
 
 #endif //MESH_H

@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace camera_control {
+namespace model_loading {
 Program::Program(unsigned int program_id) : program_id_(program_id) {}
 
 auto Program::read_file(const std::string& filename)
@@ -143,4 +143,4 @@ auto Program::SetUniform1I(const std::string& uniform_name, const int i) const
   glUseProgram(0);
   return {};
 }
-}  // namespace camera_control
+}  // namespace model_loading

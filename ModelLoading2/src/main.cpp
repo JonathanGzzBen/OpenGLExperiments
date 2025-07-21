@@ -98,7 +98,7 @@ auto main() -> int {
                           GL_TRUE);
   }
 
-  const auto program = camera_control::Program::Create(
+  const auto program = model_loading::Program::Create(
       "shaders/vertex.glsl", "shaders/fragment.glsl");
   if (!program) {
     std::cerr << "Failed to initialize program: " << program.error().message
@@ -118,11 +118,11 @@ auto main() -> int {
   glVertexArrayAttribBinding(vao, 1, 0);
   glVertexArrayAttribBinding(vao, 2, 0);
   glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE,
-                            offsetof(camera_control::Vertex, x));
+                            offsetof(model_loading::Vertex, x));
   glVertexArrayAttribFormat(vao, 1, 2, GL_FLOAT, GL_FALSE,
-                            offsetof(camera_control::Vertex, u));
+                            offsetof(model_loading::Vertex, u));
   glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE,
-                            offsetof(camera_control::Vertex, nx));
+                            offsetof(model_loading::Vertex, nx));
 
   using WindowStatus = struct WindowStatus {
     float aspect_ratio;
