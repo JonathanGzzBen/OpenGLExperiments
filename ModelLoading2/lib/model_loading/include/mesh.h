@@ -1,48 +1,45 @@
 #ifndef MESH_H
 #define MESH_H
 
-#include  <GL/glew.h>
+#include <GL/glew.h>
 
-#include  <vector>
-#include  <expected>
+#include <expected>
+#include <vector>
 
 #include "error.h"
 #include "program.h"
 
 namespace model_loading {
 using Vertex = struct Vertex {
-  float x, y, z, u, v, nx, ny, nz;
+  glm::vec3 position;
+  glm::vec3 normal;
+  glm::vec2 uv;
 };
 
+using Texture = struct Texture {
+  unsigned int id;
+  std::string type;
+};
 
 class Mesh {
-private:
-  unsigned int vbo = 0;
-  unsigned int ebo = 0;
-  size_t indices_count = 0;
+ private:
+  unsigned int vao_;
+  unsigned int vbo_;
+  unsigned int ebo_;
 
-  Mesh(const unsigned int vbo, const unsigned int ebo,
-       const size_t indices_count);
+  void setupMesh();
 
-public:
-  // Delete copy constructors
-  Mesh(const Mesh&) = delete;
-  auto operator=(const Mesh&) -> Mesh& = delete;
+ public:
+  std::vector<Vertex> vertices;
+  std::vector<unsigned int> indices;
+  std::vector<Texture> textures;
 
-  // Take ownership
-  Mesh(Mesh&& other) noexcept;
+  Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
+       std::vector<Texture> textures);
 
-  ~Mesh();
-
-  static auto Create(const std::vector<Vertex>& vertices,
-                     const std::vector<unsigned int>& indices) -> std::expected<
-    Mesh, Error>;
-
-  auto Draw(
-      const Program& program,
-      const unsigned int vao,
-      const unsigned int binding_index) const -> void;
+  auto Draw(const Program& program, const unsigned int vao) -> void;
 };
-} // namespace model_loading
 
-#endif //MESH_H
+}  // namespace model_loading
+
+#endif  // MESH_H
