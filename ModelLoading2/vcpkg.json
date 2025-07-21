@@ -1,0 +1,21 @@
+{
+  "name" : "camera-control",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "031ad89ce6c575df35a8e58707ad2c898446c63e",
+  "dependencies" : [ {
+    "name" : "glfw3",
+    "version>=" : "3.4#1"
+  }, {
+    "name" : "glew",
+    "version>=" : "2.2.0#6"
+  }, {
+    "name" : "cli11",
+    "version>=" : "2.5.0"
+  }, {
+    "name" : "glm",
+    "version>=" : "1.0.1#3"
+  }, {
+    "name" : "stb",
+    "version>=" : "2024-07-29#1"
+  } ]
+}
