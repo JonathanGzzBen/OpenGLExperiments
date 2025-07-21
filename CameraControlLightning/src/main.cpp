@@ -346,38 +346,6 @@ auto main() -> int {
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
 
-  // static constexpr auto light_direction = glm::vec3(-0.2F, -1.0F, -0.3F);
-  static constexpr auto light_position = glm::vec3(0.2F, 1.0F, 2.3F);
-  constexpr auto light_source_position = light_position;
-  if (const auto set_light_position_result =
-          program_objects->SetUniformV3("light.position", light_position);
-      !set_light_position_result) {
-    std::cerr << "Failed to set uniform: "
-              << set_light_position_result.error().message << "\n";
-    glfwTerminate();
-    return 1;
-  }
-
-  program_objects->SetUniform1F("light.cutOff", glm::cos(glm::radians(12.5F)));
-  program_objects->SetUniform1F("light.outerCutOff", glm::cos(glm::radians(17.5F)));
-  program_objects->SetUniformV3("light.direction", glm::vec3(0.0F, 0.0F, -2.0F));
-
-  program_objects->SetUniform1F("light.constant", 1.0F);
-  program_objects->SetUniform1F("light.linear", 0.09F);
-  program_objects->SetUniform1F("light.quadratic", 0.032F);
-
-  program_objects->SetUniformV3("material.ambient",
-                                glm::vec3(1.0f, 0.5f, 0.31f));
-  constexpr int diffuse_texture_unit = 0;
-  constexpr int specular_texture_unit = 1;
-  program_objects->SetUniform1I("material.diffuse", diffuse_texture_unit);
-  program_objects->SetUniform1I("material.specular", specular_texture_unit);
-  // program_objects->SetUniformV3("material.specular",
-  //                               glm::vec3(0.5f, 0.5f, 0.5f));
-  program_objects->SetUniform1F("material.shininess", 32.0F);
-  program_objects->SetUniformV3("light.ambient", glm::vec3(0.2F, 0.2F, 0.2F));
-  program_objects->SetUniformV3("light.diffuse", glm::vec3(0.5F, 0.5F, 0.5F));
-  program_objects->SetUniformV3("light.specular", glm::vec3(1.0F, 1.0F, 1.0F));
 
   auto texture = get_texture("textures/container2.png");
   if (!texture) {
@@ -391,6 +359,53 @@ auto main() -> int {
     glfwTerminate();
     return 1;
   }
+
+
+  // Material
+  program_objects->SetUniformV3("material.ambient",
+                                glm::vec3(1.0f, 0.5f, 0.31f));
+  constexpr int diffuse_texture_unit = 0;
+  constexpr int specular_texture_unit = 1;
+  program_objects->SetUniform1I("material.diffuse", diffuse_texture_unit);
+  program_objects->SetUniform1I("material.specular", specular_texture_unit);
+  program_objects->SetUniform1F("material.shininess", 32.0F);
+
+  // Directional light
+  static constexpr auto dirlight_direction = glm::vec3(-0.2F, -1.0F, -0.3F);
+  program_objects->SetUniformV3("dirLight.ambient",
+                                glm::vec3(0.05F, 0.05F, 0.05F));
+  program_objects->SetUniformV3("dirLight.diffuse",
+                                glm::vec3(0.5F, 0.5F, 0.5F));
+  program_objects->SetUniformV3("dirLight.specular",
+                                glm::vec3(1.0F, 1.0F, 1.0F));
+  program_objects->SetUniformV3("dirLight.direction", dirlight_direction);
+
+  // Point light
+  static constexpr auto light_position = glm::vec3(0.2F, 1.0F, 0.0F);
+  constexpr auto light_source_position = light_position;
+  program_objects->SetUniformV3("pointLight.position", light_position);
+  program_objects->SetUniformV3("pointLight.ambient",
+                                glm::vec3(0.05F, 0.05F, 0.05F));
+  program_objects->SetUniformV3("pointLight.diffuse",
+                                glm::vec3(0.5F, 0.5F, 0.5F));
+  program_objects->SetUniformV3("pointLight.specular",
+                                glm::vec3(1.0F, 1.0F, 1.0F));
+  program_objects->SetUniform1F("pointLight.constant", 1.0F);
+  program_objects->SetUniform1F("pointLight.linear", 0.09F);
+  program_objects->SetUniform1F("pointLight.quadratic", 0.032F);
+
+  // Spotlight
+  // program_objects->SetUniform1F("light.cutOff",
+  // glm::cos(glm::radians(12.5F)));
+  // program_objects->SetUniform1F("light.outerCutOff",
+  // glm::cos(glm::radians(17.5F)));
+  // program_objects->SetUniformV3("light.direction", glm::vec3(0.0F, 0.0F,
+  // -2.0F));
+
+  // program_objects->SetUniformV3("light.ambient", glm::vec3(0.2F, 0.2F,
+  // 0.2F)); program_objects->SetUniformV3("light.diffuse", glm::vec3(0.5F,
+  // 0.5F, 0.5F)); program_objects->SetUniformV3("light.specular",
+  // glm::vec3(1.0F, 1.0F, 1.0F));
 
   glm::vec3 cubePositions[] = {
       glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
