@@ -346,7 +346,6 @@ auto main() -> int {
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
 
-
   auto texture = get_texture("textures/container2.png");
   if (!texture) {
     std::cerr << "Failed to load texture: " << texture.error() << "\n";
@@ -359,7 +358,6 @@ auto main() -> int {
     glfwTerminate();
     return 1;
   }
-
 
   // Material
   program_objects->SetUniformV3("material.ambient",
@@ -395,17 +393,20 @@ auto main() -> int {
   program_objects->SetUniform1F("pointLight.quadratic", 0.032F);
 
   // Spotlight
-  // program_objects->SetUniform1F("light.cutOff",
-  // glm::cos(glm::radians(12.5F)));
-  // program_objects->SetUniform1F("light.outerCutOff",
-  // glm::cos(glm::radians(17.5F)));
-  // program_objects->SetUniformV3("light.direction", glm::vec3(0.0F, 0.0F,
-  // -2.0F));
+  program_objects->SetUniform1F("spotLight.cutOff",
+                                glm::cos(glm::radians(12.5F)));
+  program_objects->SetUniform1F("spotLight.outerCutOff",
+                                glm::cos(glm::radians(17.5F)));
+  program_objects->SetUniform1F("spotLight.constant", 1.0F);
+  program_objects->SetUniform1F("spotLight.linear", 0.09F);
+  program_objects->SetUniform1F("spotLight.quadratic", 0.032F);
 
-  // program_objects->SetUniformV3("light.ambient", glm::vec3(0.2F, 0.2F,
-  // 0.2F)); program_objects->SetUniformV3("light.diffuse", glm::vec3(0.5F,
-  // 0.5F, 0.5F)); program_objects->SetUniformV3("light.specular",
-  // glm::vec3(1.0F, 1.0F, 1.0F));
+  program_objects->SetUniformV3("spotLight.ambient",
+                                glm::vec3(0.2F, 0.2F, 0.2F));
+  program_objects->SetUniformV3("spotLight.diffuse",
+                                glm::vec3(0.5F, 0.5F, 0.5F));
+  program_objects->SetUniformV3("spotLight.specular",
+                                glm::vec3(1.0F, 1.0F, 1.0F));
 
   glm::vec3 cubePositions[] = {
       glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
@@ -454,6 +455,9 @@ auto main() -> int {
       glfwTerminate();
       return 1;
     }
+
+    program_objects->SetUniformV3("spotLight.position", camera_position);
+    program_objects->SetUniformV3("spotLight.direction", camera_front);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
