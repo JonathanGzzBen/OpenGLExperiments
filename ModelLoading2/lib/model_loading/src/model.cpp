@@ -62,7 +62,12 @@ auto model_loading::Model::loadModel(const std::string& path) -> void {
     std::println(std::cerr, "Could not open model file '{}'", path);
     return;
   }
-  directory = path.substr(0, path.find_last_of('/'));
+
+  auto dirnameOf = [](const std::string& fname) -> std::string {
+    size_t pos = fname.find_last_of("\\/");
+    return (std::string::npos == pos) ? "" : fname.substr(0, pos);
+  };
+  directory = dirnameOf(path);
   processNode(scene->mRootNode, scene);
 }
 
@@ -140,8 +145,7 @@ auto model_loading::Model::loadMaterialTextures(aiMaterial* mat,
     }
     if (!skip) {
       Texture texture;
-      auto tex_id =
-          get_texture(std::string("models/backpack/") + texturePath.C_Str());
+      auto tex_id = get_texture(directory + "/" + texturePath.C_Str());
       if (!tex_id) {
         std::println(std::cerr, "Could not load texture");
         continue;
