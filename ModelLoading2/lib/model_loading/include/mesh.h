@@ -19,6 +19,7 @@ using Vertex = struct Vertex {
 using Texture = struct Texture {
   unsigned int id;
   std::string type;
+  std::string path;
 };
 
 class Mesh {
@@ -37,7 +38,7 @@ class Mesh {
   Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices,
        std::vector<Texture> textures);
 
-  auto Draw(const Program& program, const unsigned int vao) -> void;
+  auto Draw(const Program& program) -> void;
 };
 
 }  // namespace model_loading

@@ -41,7 +41,7 @@ model_loading::Mesh::Mesh(std::vector<Vertex> vertices,
   setupMesh();
 }
 
-auto model_loading::Mesh::Draw(const Program& program, const unsigned int vao)
+auto model_loading::Mesh::Draw(const Program& program)
     -> void {
   unsigned int diffuseNbr = 0;
   unsigned int specularNbr = 0;
