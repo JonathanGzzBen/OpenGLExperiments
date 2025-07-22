@@ -5,9 +5,9 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
-#include <vector>
 
 #include "mesh.h"
+#include "model.h"
 #include "program.h"
 
 void APIENTRY glDebugCallback(GLenum source, GLenum type, GLuint error_id,
@@ -98,8 +98,8 @@ auto main() -> int {
                           GL_TRUE);
   }
 
-  const auto program = model_loading::Program::Create(
-      "shaders/vertex.glsl", "shaders/fragment.glsl");
+  const auto program = model_loading::Program::Create("shaders/vertex.glsl",
+                                                      "shaders/fragment.glsl");
   if (!program) {
     std::cerr << "Failed to initialize program: " << program.error().message
               << "\n";
@@ -107,22 +107,6 @@ auto main() -> int {
     glfwTerminate();
     return 1;
   }
-
-  unsigned int vao;
-  glCreateVertexArrays(1, &vao);
-  glEnableVertexArrayAttrib(vao, 0);
-  glEnableVertexArrayAttrib(vao, 1);
-  glEnableVertexArrayAttrib(vao, 2);
-
-  glVertexArrayAttribBinding(vao, 0, 0);
-  glVertexArrayAttribBinding(vao, 1, 0);
-  glVertexArrayAttribBinding(vao, 2, 0);
-  glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE,
-                            offsetof(model_loading::Vertex, x));
-  glVertexArrayAttribFormat(vao, 1, 2, GL_FLOAT, GL_FALSE,
-                            offsetof(model_loading::Vertex, u));
-  glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE,
-                            offsetof(model_loading::Vertex, nx));
 
   using WindowStatus = struct WindowStatus {
     float aspect_ratio;
@@ -221,6 +205,8 @@ auto main() -> int {
     return delta_time;
   };
 
+  model_loading::Model backpack_model("models/backpack/backpack.obj");
+
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
 
@@ -250,9 +236,18 @@ auto main() -> int {
       glfwTerminate();
       return 1;
     }
+
+    const auto model_matrix = glm::mat4(1.0F);
+    if (const auto res = program->SetUniformMatrix("mModel", model_matrix);
+        !res) {
+      std::cerr << "Failed to set uniform: " << res.error().message << "\n";
+      glfwTerminate();
+      return 1;
+    }
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     program->Use();
+    backpack_model.Draw(*program);
 
     glUseProgram(0);
 

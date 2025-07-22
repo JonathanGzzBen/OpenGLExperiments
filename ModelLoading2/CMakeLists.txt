@@ -77,7 +77,8 @@ endif ()
 
 add_library(model_loading_lib STATIC
         lib/model_loading/src/program.cpp
-        lib/model_loading/src/mesh.cpp)
+        lib/model_loading/src/mesh.cpp
+        lib/model_loading/src/model.cpp)
 target_include_directories(model_loading_lib PUBLIC
         ${CMAKE_SOURCE_DIR}/lib/model_loading/include)
 target_link_libraries(model_loading_lib PUBLIC GLEW::GLEW)
