@@ -1,11 +1,15 @@
 #define STB_IMAGE_IMPLEMENTATION
+#define STB_TRUETYPE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
+#include <stb_truetype.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
+#include "fonts.h"
 #include "mesh.h"
 #include "model.h"
 #include "program.h"
@@ -222,6 +226,18 @@ auto main() -> int {
 
   auto square_mesh = text_renderer::Mesh(square_vertices, square_indices,
                                          std::vector<text_renderer::Texture>());
+
+  // TEXTO
+
+  const uint8_t* font_data = read_font_atlas("fonts/arial.ttf");
+
+  if (const auto font_count = stbtt_GetNumberOfFonts(font_data);
+      font_count == -1) {
+    std::cerr << "Failed to load fonts: " << font_data << "\n";
+  } else {
+    std::cout << "The file contains " << font_count << " fonts.\n";
+  }
+  load_atlas_bitmap(font_data);
 
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
