@@ -315,11 +315,13 @@ using Mesh = struct Mesh {
   unsigned int vao;
   unsigned int vbo;
   unsigned int ebo;
+  unsigned int indices_count;
+  unsigned int texture_id;
 };
 
-auto create_mesh_from_vertices(const std::vector<Vertex>& vertices,
-                               const std::vector<unsigned int>& indices)
-    -> Mesh {
+auto create_mesh(const std::vector<Vertex>& vertices,
+                 const std::vector<unsigned int>& indices,
+                 unsigned int texture_id) -> Mesh {
   unsigned int vao;
   glGenVertexArrays(1, &vao);
   glBindVertexArray(vao);
@@ -351,12 +353,12 @@ auto create_mesh_from_vertices(const std::vector<Vertex>& vertices,
   glEnableVertexAttribArray(2);
 
   glBindVertexArray(0);
-  return Mesh{
-      .valid = true,
-      .vao = vao,
-      .vbo = vbo,
-      .ebo = ebo,
-  };
+  return Mesh{.valid = true,
+              .vao = vao,
+              .vbo = vbo,
+              .ebo = ebo,
+              .indices_count = static_cast<unsigned int>(indices.size()),
+              .texture_id = texture_id};
 }
 
 using Text = struct Text {
@@ -364,12 +366,10 @@ using Text = struct Text {
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
   Font font;
-  unsigned int texture_id;
 };
 
-auto DrawText(const std::string& text, const glm::vec3 position,
-              const glm::vec4 color, float size, const Font font,
-              unsigned int texture_id) -> Text {
+auto create_text(const std::string& text, const glm::vec3 position,
+                 const glm::vec4 color, float size, const Font font) -> Text {
   if (!font.valid) {
     return Text{.valid = false};
   }
@@ -445,11 +445,12 @@ auto DrawText(const std::string& text, const glm::vec3 position,
 
     cursor_position.x += packed_char->xadvance * pixel_scale * size;
   }
-  return Text{.valid = true,
-              .vertices = vertices,
-              .indices = indices,
-              .font = font,
-              .texture_id = texture_id};
+  return Text{
+      .valid = true,
+      .vertices = vertices,
+      .indices = indices,
+      .font = font,
+  };
 }
 
 int main(void) {
@@ -515,25 +516,23 @@ int main(void) {
   glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
 
   // Draw full font atlas
-  auto vertices = get_fullscreen_font_atlas_vertices();
-  std::vector<unsigned int> indices = {0, 1, 2, 1, 2, 3};
-  auto mesh = create_mesh_from_vertices(vertices, indices);
+  // auto vertices = get_fullscreen_font_atlas_vertices();
+  // std::vector<unsigned int> indices = {0, 1, 2, 1, 2, 3};
+  // auto mesh = create_mesh(vertices, indices, 0);
+  // glBindVertexArray(mesh.vao);
 
-  // Render
-  glBindVertexArray(mesh.vao);
-
-  auto text =
-      DrawText("Hola", glm::vec3(-1.0, 0.5, 0.0), glm::vec4(1.0, 1.0, 1.0, 1.0),
-               1.0F, font, font_atlas_texture_id);
-  auto text_mesh = create_mesh_from_vertices(text.vertices, text.indices);
+  auto text = create_text("Hola", glm::vec3(-1.0, 0.5, 0.0),
+                          glm::vec4(1.0, 1.0, 1.0, 1.0), 1.0F, font);
+  auto text_mesh =
+      create_mesh(text.vertices, text.indices, font_atlas_texture_id);
   glBindVertexArray(text_mesh.vao);
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, text.texture_id);
+  glBindTexture(GL_TEXTURE_2D, text_mesh.texture_id);
 
   while (glfwWindowShouldClose(window.glfw_window) == 0) {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glDrawElements(GL_TRIANGLES, static_cast<int>(text.indices.size()),
+    glDrawElements(GL_TRIANGLES, static_cast<int>(text_mesh.indices_count),
                    GL_UNSIGNED_INT, nullptr);
 
     glfwPollEvents();
