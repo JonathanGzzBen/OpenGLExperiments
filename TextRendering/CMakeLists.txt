@@ -88,6 +88,7 @@ set_target_properties(text_rendering_lib PROPERTIES CXX_STANDARD_REQUIRED ON)
 find_package(Stb REQUIRED)
 
 find_package(assimp CONFIG REQUIRED)
+find_package(glad  CONFIG REQUIRED)
 
 add_executable(text_rendering src/main.cpp
         lib/model_loading/include/program.h)
@@ -96,3 +97,24 @@ target_link_libraries(text_rendering text_rendering_lib glfw GLEW::GLEW glm::glm
 target_include_directories(text_rendering PRIVATE ${CMAKE_SOURCE_DIR}/include ${Stb_INCLUDE_DIR})
 set_target_properties(text_rendering PROPERTIES CXX_STANDARD 23)
 set_target_properties(text_rendering PROPERTIES CXX_STANDARD_REQUIRED ON)
+
+add_executable(text_rendering_copied main2.cpp
+        lib/model_loading/include/program.h)
+target_link_libraries(text_rendering_copied glfw GLEW::GLEW glm::glm CLI11::CLI11 assimp::assimp glad::glad)
+target_include_directories(text_rendering_copied PRIVATE ${CMAKE_SOURCE_DIR}/include ${Stb_INCLUDE_DIR} ${Glad_INCLUDE_DIR})
+set_target_properties(text_rendering_copied PROPERTIES CXX_STANDARD 23)
+set_target_properties(text_rendering_copied PROPERTIES CXX_STANDARD_REQUIRED ON)
+
+add_executable(text_rendering_halfmine main3.cpp
+        lib/model_loading/include/program.h)
+target_link_libraries(text_rendering_halfmine glfw GLEW::GLEW glm::glm CLI11::CLI11 assimp::assimp glad::glad)
+target_include_directories(text_rendering_halfmine PRIVATE ${CMAKE_SOURCE_DIR}/include ${Stb_INCLUDE_DIR} ${Glad_INCLUDE_DIR})
+set_target_properties(text_rendering_halfmine PROPERTIES CXX_STANDARD 23)
+set_target_properties(text_rendering_halfmine PROPERTIES CXX_STANDARD_REQUIRED ON)
+
+add_executable(text_rendering_mine main_mine.cpp
+        lib/model_loading/include/program.h)
+target_link_libraries(text_rendering_mine glfw GLEW::GLEW glm::glm CLI11::CLI11 assimp::assimp glad::glad)
+target_include_directories(text_rendering_mine PRIVATE ${CMAKE_SOURCE_DIR}/include ${Stb_INCLUDE_DIR} ${Glad_INCLUDE_DIR})
+set_target_properties(text_rendering_mine PROPERTIES CXX_STANDARD 23)
+set_target_properties(text_rendering_mine PROPERTIES CXX_STANDARD_REQUIRED ON)

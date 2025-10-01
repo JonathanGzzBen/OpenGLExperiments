@@ -6,6 +6,16 @@
 #include <fstream>
 #include <ios>
 #include <string>
+#include <vector>
+
+using Vertex2 = struct Vertex2 {
+  glm::vec3 position;
+  glm::vec4 color;
+  glm::vec2 uv;
+};
+
+static constexpr uint32_t font_atlas_width = 1024;
+static constexpr uint32_t font_atlas_height = 1024;
 
 [[nodiscard]]
 inline uint8_t* read_font_atlas(const std::string& filename) {
@@ -19,10 +29,7 @@ inline uint8_t* read_font_atlas(const std::string& filename) {
   return font_data_buf;
 }
 
-void load_atlas_bitmap(const uint8_t* font_data_buf) {
-  constexpr uint32_t font_atlas_width = 1024;
-  constexpr uint32_t font_atlas_height = 1024;
-
+uint8_t* load_atlas_bitmap(const uint8_t* font_data_buf) {
   uint8_t* font_atlas_bitmap =
       new uint8_t[font_atlas_width * font_atlas_height];
 
@@ -64,6 +71,89 @@ void load_atlas_bitmap(const uint8_t* font_data_buf) {
 
   stbi_write_png("fontAtlas.png", font_atlas_width, font_atlas_height, 1,
                  font_atlas_bitmap, font_atlas_width);
+  return font_atlas_bitmap;
+}
+
+unsigned int generate_font_atlas_texture(const uint8_t* font_atlas_bitmap) {
+  if (font_atlas_bitmap == nullptr) {
+    return 0;
+  }
+  uint32_t font_atlas_texture_id;
+  glGenTextures(1, &font_atlas_texture_id);
+  glBindTexture(GL_TEXTURE_2D, font_atlas_texture_id);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, font_atlas_width, font_atlas_height, 0,
+               GL_RED, GL_UNSIGNED_BYTE, font_atlas_bitmap);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+  glBindTexture(GL_TEXTURE_2D, 0);
+  return font_atlas_texture_id;
+}
+
+void draw_text(const std::string& text, glm::vec3 position, glm::vec4 color,
+               float size, float pixel_scale, stbtt_packedchar packed_chars[],
+               stbtt_aligned_quad aligned_quads[],
+               unsigned int code_point_first_char,
+               unsigned int chars_to_include_in_font_alias) {
+  glm::vec3 localPosition = position;
+
+  std::vector<Vertex2> vertices;
+  for (char ch : text) {
+    if (ch >= code_point_first_char &&
+        ch <= code_point_first_char + chars_to_include_in_font_alias) {
+      stbtt_packedchar* packed_char = &packed_chars[ch - code_point_first_char];
+      stbtt_aligned_quad* aligned_quad =
+          &aligned_quads[ch - code_point_first_char];
+
+      glm::vec2 glyph_size = {
+          (packed_char->x1 - packed_char->x0) * pixel_scale * size,
+          (packed_char->y1 - packed_char->y0) * pixel_scale * size,
+      };
+
+      glm::vec2 glyph_bounding_box_bottom_left = {
+          localPosition.x + (packed_char->xoff * pixel_scale * size),
+          localPosition.y +
+              (packed_char->yoff + packed_char->y1 - packed_char->y0) *
+                  pixel_scale * size,
+      };
+
+      glm::vec2 glyph_vertices[4] = {
+          {glyph_bounding_box_bottom_left.x + glyph_size.x,
+           glyph_bounding_box_bottom_left.y + glyph_size.y},
+          {glyph_bounding_box_bottom_left.x,
+           glyph_bounding_box_bottom_left.y + glyph_size.y},
+          {glyph_bounding_box_bottom_left.x, glyph_bounding_box_bottom_left.y},
+          {glyph_bounding_box_bottom_left.x + glyph_size.x,
+           glyph_bounding_box_bottom_left.y},
+      };
+
+      glm::vec2 glyph_texture_coordinates[4] = {
+          {aligned_quad->s1, aligned_quad->t0},
+          {aligned_quad->s0, aligned_quad->t0},
+          {aligned_quad->s0, aligned_quad->t1},
+          {aligned_quad->s1, aligned_quad->t1}};
+
+      // int vertex_index = 0; Tal vez deba ser local, sobretodo si uso un mesh
+      static int vertex_index = 0;
+      int order[6] = {0, 1, 2, 0, 2, 3};
+      for (int i = 0; i < 6; i++) {
+        vertices[vertex_index + i].position =
+            glm::vec3(glyph_vertices[order[i]], position.z);
+        vertices[vertex_index + i].color = color;
+        vertices[vertex_index + i].uv = glyph_texture_coordinates[order[i]];
+      }
+      vertex_index += 6;
+
+      localPosition.x += packed_char->xadvance * pixel_scale * size;
+    } else if (ch == '\n') {                          // Handle newline
+      localPosition.y -= 64.0f * pixel_scale * size;  // font_size
+      localPosition.x = position.x;
+    }
+  }
 }
 
 #endif  // FONTS_H

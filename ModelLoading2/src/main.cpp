@@ -205,7 +205,10 @@ auto main() -> int {
     return delta_time;
   };
 
-  model_loading::Model backpack_model("models/backpack/backpack.obj");
+  // model_loading::Model backpack_model("models/backpack/backpack.obj");
+  model_loading::Model backpack_model("models/bunny/bunny.obj");
+  // model_loading::Model backpack_model("models/holodeck/holodeck.obj");
+  // model_loading::Model backpack_model("models/dragon/dragon.obj");
 
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
@@ -237,7 +240,8 @@ auto main() -> int {
       return 1;
     }
 
-    const auto model_matrix = glm::mat4(1.0F);
+    auto model_matrix = glm::mat4(1.0F);
+    // model_matrix = glm::scale(model_matrix, glm::vec3(0.001F, 0.001F, 0.001F));
     if (const auto res = program->SetUniformMatrix("mModel", model_matrix);
         !res) {
       std::cerr << "Failed to set uniform: " << res.error().message << "\n";

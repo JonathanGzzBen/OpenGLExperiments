@@ -1,12 +1,11 @@
-#define STB_IMAGE_IMPLEMENTATION
 #define STB_TRUETYPE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <stb_image.h>
 #include <stb_truetype.h>
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
 #include "fonts.h"
@@ -26,42 +25,40 @@ void glfwErrorCallback(const int error, const char* description) {
   std::cerr << "GLFW error: " << description << "\n";
 }
 
-auto get_image_data(const std::string& filename, int n_components)
-    -> std::expected<
-        std::tuple<std::unique_ptr<unsigned char, decltype(&stbi_image_free)>,
-                   int, int>,
-        std::string> {
-  int x, y, n;
-  unsigned char* data = stbi_load(filename.c_str(), &x, &y, &n, n_components);
-  if (data == nullptr) {
-    return std::unexpected(std::format("Could not load texture '{}': {}",
-                                       filename, stbi_failure_reason()));
+const size_t VBO_SIZE = 600000 * sizeof(text_renderer::Vertex2);
+
+static void Render(const std::vector<text_renderer::Vertex2>& vertices,
+                   unsigned int shader_program_id, unsigned int vao,
+                   unsigned int vbo, glm::mat4 view_projection_matrix) {
+  // The vertex buffer need to be divided into chunks of size 'VBO_SIZE',
+  // Upload them to the VBO and render
+  // This is repeated for every divided chunk of the vertex buffer.
+  size_t sizeOfVertices = vertices.size() * sizeof(text_renderer::Vertex2);
+  uint32_t drawCallCount =
+      (sizeOfVertices / VBO_SIZE) + 1;  // aka number of chunks.
+
+  // Render each chunk of vertex data.
+  for (int i = 0; i < drawCallCount; i++) {
+    const text_renderer::Vertex2* data = vertices.data() + i * VBO_SIZE;
+
+    uint32_t vertexCount =
+        i == drawCallCount - 1
+            ? (sizeOfVertices % VBO_SIZE) / sizeof(text_renderer::Vertex2)
+            : VBO_SIZE / (sizeof(text_renderer::Vertex2) * 6);
+
+    int uniformLocation =
+        glGetUniformLocation(shader_program_id, "uViewProjectionMat");
+    glUniformMatrix4fv(uniformLocation, 1, GL_TRUE,
+                       glm::value_ptr(view_projection_matrix));
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(
+        GL_ARRAY_BUFFER, 0,
+        i == drawCallCount - 1 ? sizeOfVertices % VBO_SIZE : VBO_SIZE, data);
+
+    glDrawArrays(GL_TRIANGLES, 0, vertexCount);
   }
-
-  std::unique_ptr<unsigned char, decltype(&stbi_image_free)> tex_data(
-      data, &stbi_image_free);
-  return {{std::move(tex_data), x, y}};
-};
-
-auto get_texture(const std::string& filename)
-    -> std::expected<unsigned int, std::string> {
-  const auto image_data = get_image_data(filename, 3);
-  if (!image_data) {
-    return std::unexpected(std::format("Could not load texture '{}': {}",
-                                       filename, image_data.error()));
-  }
-  const auto& [data, width, height] = *image_data;
-
-  unsigned int texture;
-  glCreateTextures(GL_TEXTURE_2D, 1, &texture);
-  glTextureStorage2D(texture, 1, GL_RGB8, width, height);
-  glTextureParameteri(texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTextureParameteri(texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE,
-                      data.get());
-  return {texture};
 }
 
 auto main() -> int {
@@ -77,8 +74,9 @@ auto main() -> int {
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 
+  constexpr unsigned int window_height = 600;
   GLFWwindow* window =
-      glfwCreateWindow(800, 600, "Model Loading", nullptr, nullptr);
+      glfwCreateWindow(800, window_height, "Text Rendering", nullptr, nullptr);
   if (window == nullptr) {
     std::cerr << "Failed to create GLFW window!\n";
     glfwTerminate();
@@ -237,7 +235,14 @@ auto main() -> int {
   } else {
     std::cout << "The file contains " << font_count << " fonts.\n";
   }
-  load_atlas_bitmap(font_data);
+  const uint8_t* font_atlas_bitmap = load_atlas_bitmap(font_data);
+  const unsigned int font_atlas_texture_id =
+      generate_font_atlas_texture(font_data);
+  // delete[] font_atlas_bitmap;
+  // delete[] font_data;
+
+  float pixel_scale = 2.0 / window_height;
+
 
   glEnable(GL_DEPTH_TEST);
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
