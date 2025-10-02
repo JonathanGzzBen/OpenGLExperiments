@@ -6,6 +6,7 @@
 #include <print>
 
 #include "jtr/graphic_context.h"
+#include "jtr/mesh.h"
 
 auto glfw_error_callback(int error, const char *description) -> void {
   std::println(std::cerr, "GLFW error {}: {}", error, description);
@@ -42,6 +43,13 @@ auto main() -> int {
     std::println(std::cerr, "Could not create Graphic context");
     return 1;
   }
+
+  auto mesh_manager = mesh_manager_create(2);
+  if (!mesh_manager.valid) {
+    std::println(std::cerr, "Could not create Mesh manager");
+    return 1;
+  }
+  mesh_manager_destroy_all(mesh_manager);
 
   glEnable(GL_DEPTH_TEST);
   /* Enable alpha blend for font */
