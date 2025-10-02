@@ -1,0 +1,21 @@
+{
+  "name" : "firstrenderingengine",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "f5800a22acb14d7f753e8be12fe5ec2bc999ab44",
+  "dependencies" : [ {
+    "name" : "glfw3",
+    "version>=" : "3.4#1"
+  }, {
+    "name" : "glew",
+    "version>=" : "2.2.0#6"
+  }, {
+    "name" : "glm",
+    "version>=" : "1.0.1#3"
+  }, {
+    "name" : "assimp",
+    "version>=" : "6.0.2#1"
+  }, {
+    "name" : "stb",
+    "version>=" : "2024-07-29#1"
+  } ]
+}
