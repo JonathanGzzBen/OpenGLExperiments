@@ -6,6 +6,10 @@
 #include <print>
 
 auto mesh_manager_create(int max_num_meshes) -> MeshManager {
+  if (max_num_meshes <= 0) {
+    std::println(std::cerr, "Invalid max number of meshes");
+    return {.valid = false};
+  }
   const auto meshes_ptr = new Mesh[max_num_meshes];
   return MeshManager{.valid = true,
                      .meshes = meshes_ptr,
@@ -51,8 +55,8 @@ auto mesh_destroy(const MeshManager &mesh_manager, const MeshHandle handle)
     std::println(std::cerr, "Mesh manager not valid");
     return;
   }
-  const auto mesh = mesh_get(mesh_manager, handle);
-  if (!mesh) {
+  auto *const mesh = mesh_get(mesh_manager, handle);
+  if (mesh == nullptr) {
     std::println(std::cerr, "Invalid handle");
     return;
   }
@@ -91,10 +95,10 @@ auto mesh_create(MeshManager &mesh_manager, const MeshData &mesh_data)
   glCreateBuffers(1, &ebo);
 
   glNamedBufferStorage(vbo, sizeof(Vertex) * mesh_data.num_vertices,
-                       mesh_data.vertices, GL_STATIC_DRAW);
+                       mesh_data.vertices, GL_DYNAMIC_STORAGE_BIT);
 
   glNamedBufferStorage(ebo, sizeof(unsigned int) * mesh_data.num_indices,
-                       mesh_data.indices, GL_STATIC_DRAW);
+                       mesh_data.indices, GL_DYNAMIC_STORAGE_BIT);
 
   const size_t handle = mesh_manager.meshes_count++;
   mesh_manager.meshes[handle] = Mesh{
