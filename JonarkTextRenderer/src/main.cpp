@@ -42,19 +42,19 @@ auto read_file(const char *filename) -> std::unique_ptr<char[]> {
 }
 
 // For single parameter
-// template <typename T, typename Constructor, typename Arg, typename Deleter>
-// auto get_smart_manager(Constructor constructor, Arg &&arg, Deleter deleter) {
-//   return std::unique_ptr<T, Deleter>(new
-//   T(constructor(std::forward<Arg>(arg))),
-//                                      deleter);
-// }
-
-template <typename T, typename Constructor, typename Deleter, typename... Args>
-auto get_smart_manager(Constructor constructor, Deleter deleter,
-                       Args &&...args) {
-  return std::unique_ptr<T, Deleter>(
-      new T(constructor(std::forward<Args>(args)...)), deleter);
+template <typename T, typename Constructor, typename Deleter>
+auto get_smart_manager(Constructor constructor, int &&max_num,
+                       Deleter deleter) {
+  return std::unique_ptr<T, Deleter>(new T(constructor(max_num)), deleter);
 }
+
+// Variadic
+// template <typename T, typename Constructor, typename Deleter, typename...
+// Args> auto get_smart_manager(Constructor constructor, Deleter deleter,
+//                        Args &&...args) {
+//   return std::unique_ptr<T, Deleter>(
+//       new T(constructor(std::forward<Args>(args)...)), deleter);
+// }
 
 auto main() -> int {
   GraphicContextConfig config{
@@ -74,15 +74,17 @@ auto main() -> int {
       .window_width = 600,
       .window_height = 600,
   };
-  auto graphic_context = get_smart_manager<GraphicContext>(
-      graphic_context_create, graphic_context_destroy, config);
+  const auto graphic_context =
+      std::unique_ptr<GraphicContext, decltype(&graphic_context_destroy)>(
+          new GraphicContext(graphic_context_create(config)),
+          graphic_context_destroy);
   if (!graphic_context->valid) {
     std::println(std::cerr, "Could not create Graphic context");
     return 1;
   }
 
   auto program_manager = get_smart_manager<ProgramManager>(
-      program_manager_create, program_manager_destroy_all, 1);
+      program_manager_create, 1, program_manager_destroy_all);
   if (!program_manager->valid) {
     std::println(std::cerr, "Could not create Mesh manager");
     return 1;
@@ -95,7 +97,7 @@ auto main() -> int {
   }();
 
   const auto texture_manager = get_smart_manager<TextureManager>(
-      texture_manager_create, texture_manager_destroy_all, 1);
+      texture_manager_create, 2, texture_manager_destroy_all);
   auto texture_handle =
       texture_create(*texture_manager, font.bitmap, 1024, 1024);
   const auto *texture = texture_get(*texture_manager, texture_handle);
@@ -132,7 +134,7 @@ auto main() -> int {
   glEnableVertexArrayAttrib(vao, 1);
 
   const auto mesh_manager = get_smart_manager<MeshManager>(
-      mesh_manager_create, mesh_manager_destroy_all, 2);
+      mesh_manager_create, 2, mesh_manager_destroy_all);
   if (!mesh_manager->valid) {
     std::println(std::cerr, "Could not create Mesh manager");
     return 1;
