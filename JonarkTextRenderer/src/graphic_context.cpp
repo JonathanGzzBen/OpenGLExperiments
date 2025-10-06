@@ -70,11 +70,11 @@ auto graphic_context_create(const GraphicContextConfig &config)
   return g_graphic_context;
 }
 
-auto graphic_context_destroy(GraphicContext &graphic_context) -> void {
-  if (!graphic_context.valid) {
+auto graphic_context_destroy(GraphicContext *graphic_context) -> void {
+  if (!graphic_context->valid) {
     return;
   }
-  glfwDestroyWindow(graphic_context.window);
+  glfwDestroyWindow(graphic_context->window);
   glfwTerminate();
-  graphic_context.valid = false;
+  graphic_context->valid = false;
 }

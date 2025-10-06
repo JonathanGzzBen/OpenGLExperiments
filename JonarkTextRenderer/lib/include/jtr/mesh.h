@@ -37,12 +37,12 @@ using MeshManager = struct MeshManager {
 
 auto mesh_manager_create(int max_num_meshes) -> MeshManager;
 
-auto mesh_manager_destroy_all(MeshManager &mesh_manager) -> void;
+auto mesh_manager_destroy_all(MeshManager *mesh_manager) -> void;
 
 auto mesh_get(const MeshManager &mesh_manager, MeshHandle handle) -> Mesh *;
 
 // Causes internal fragmentation
-auto mesh_destroy(const MeshManager &mesh_manager, const MeshHandle handle)
+auto mesh_destroy(const MeshManager *mesh_manager, const MeshHandle handle)
     -> void;
 
 auto mesh_create(MeshManager &mesh_manager, const MeshData &mesh_data)

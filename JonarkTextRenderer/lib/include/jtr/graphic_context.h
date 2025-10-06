@@ -34,6 +34,6 @@ using GraphicContext = struct GraphicContext {
 auto graphic_context_create(const GraphicContextConfig &config)
     -> GraphicContext;
 
-auto graphic_context_destroy(GraphicContext &graphic_context) -> void;
+auto graphic_context_destroy(GraphicContext *graphic_context) -> void;
 
 #endif  // GRAPHIC_CONTEXT_H

@@ -17,7 +17,7 @@ using ProgramManager = struct ProgramManager {
 
 auto program_manager_create(int max_num_programs) -> ProgramManager;
 
-auto program_manager_destroy_all(ProgramManager &program_manager) -> void;
+auto program_manager_destroy_all(ProgramManager *program_manager) -> void;
 
 auto program_get(const ProgramManager &program_manager,
                  const ProgramHandle handle) -> Program *;

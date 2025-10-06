@@ -1,3 +1,5 @@
+#define STB_TRUETYPE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -9,6 +11,8 @@
 #include "jtr/graphic_context.h"
 #include "jtr/mesh.h"
 #include "jtr/program.h"
+#include "jtr/text.h"
+#include "jtr/texture.h"
 
 auto glfw_error_callback(int error, const char *description) -> void {
   std::println(std::cerr, "GLFW error {}: {}", error, description);
@@ -22,7 +26,7 @@ void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint debug_id,
   }
 }
 
-auto read_file(const char *filename) -> const char * {
+auto read_file(const char *filename) -> std::unique_ptr<char[]> {
   std::ifstream stream(filename, std::ios::binary);
   if (!stream.is_open()) {
     std::println(std::cerr, "Could not open file {}", filename);
@@ -31,30 +35,29 @@ auto read_file(const char *filename) -> const char * {
   stream.seekg(0, std::ios::end);
   const auto size = static_cast<size_t>(stream.tellg());
   stream.seekg(0, std::ios::beg);
-  auto *buffer = new char[size + 1];
-  stream.read(buffer, static_cast<long long>(size));
+  auto buffer = std::make_unique<char[]>(size + 1);
+  stream.read(buffer.get(), static_cast<long long>(size));
   buffer[size] = '\0';
   return buffer;
 }
 
-[[noreturn]]
-auto terminate_application(int status_code, GraphicContext *graphic_context,
-                           ProgramManager *program_manager,
-                           MeshManager *mesh_manager) -> void {
-  if (program_manager != nullptr && program_manager->valid) {
-    program_manager_destroy_all(*program_manager);
-  }
-  if (mesh_manager != nullptr && mesh_manager->valid) {
-    mesh_manager_destroy_all(*mesh_manager);
-  }
-  if (graphic_context != nullptr && graphic_context->valid) {
-    graphic_context_destroy(*graphic_context);
-  }
-  exit(status_code);
+// For single parameter
+// template <typename T, typename Constructor, typename Arg, typename Deleter>
+// auto get_smart_manager(Constructor constructor, Arg &&arg, Deleter deleter) {
+//   return std::unique_ptr<T, Deleter>(new
+//   T(constructor(std::forward<Arg>(arg))),
+//                                      deleter);
+// }
+
+template <typename T, typename Constructor, typename Deleter, typename... Args>
+auto get_smart_manager(Constructor constructor, Deleter deleter,
+                       Args &&...args) {
+  return std::unique_ptr<T, Deleter>(
+      new T(constructor(std::forward<Args>(args)...)), deleter);
 }
 
 auto main() -> int {
-  constexpr GraphicContextConfig config{
+  GraphicContextConfig config{
       .glfw_error_callback = glfw_error_callback,
       .glfw_window_hints =
           {
@@ -71,25 +74,45 @@ auto main() -> int {
       .window_width = 600,
       .window_height = 600,
   };
-  auto graphic_context = graphic_context_create(config);
-  if (!graphic_context.valid) {
+  auto graphic_context = get_smart_manager<GraphicContext>(
+      graphic_context_create, graphic_context_destroy, config);
+  if (!graphic_context->valid) {
     std::println(std::cerr, "Could not create Graphic context");
-    terminate_application(EXIT_FAILURE, &graphic_context, nullptr, nullptr);
+    return 1;
   }
 
-  auto program_manager = program_manager_create(1);
-  if (!program_manager.valid) {
+  auto program_manager = get_smart_manager<ProgramManager>(
+      program_manager_create, program_manager_destroy_all, 1);
+  if (!program_manager->valid) {
     std::println(std::cerr, "Could not create Mesh manager");
-    terminate_application(EXIT_FAILURE, &graphic_context, &program_manager,
-                          nullptr);
+    return 1;
   }
 
-  const auto *const vertex_shader_source = read_file("shaders/vertex.glsl");
-  const auto *const fragment_shader_source = read_file("shaders/fragment.glsl");
-  const auto program_handle = program_create(
-      program_manager, vertex_shader_source, fragment_shader_source);
-  delete[] vertex_shader_source;
-  delete[] fragment_shader_source;
+  const auto font = []() {
+    const auto font_data = read_file("fonts/arial.ttf");
+    return load_font(reinterpret_cast<const unsigned char *>(font_data.get()),
+                     32, 95, 64.0F, 600, 600, 1024, 1024);
+  }();
+
+  const auto texture_manager = get_smart_manager<TextureManager>(
+      texture_manager_create, texture_manager_destroy_all, 1);
+  auto texture_handle =
+      texture_create(*texture_manager, font.bitmap, 1024, 1024);
+  const auto *texture = texture_get(*texture_manager, texture_handle);
+  if (texture == nullptr || !texture->valid) {
+    std::println(std::cerr, "Could not create Texture");
+    return 1;
+  }
+
+  const auto program_handle = [&program_manager]() {
+    auto vertex_shader_source =
+        std::unique_ptr<const char[]>(read_file("shaders/vertex.glsl"));
+    auto fragment_shader_source =
+        std::unique_ptr<const char[]>(read_file("shaders/fragment.glsl"));
+
+    return program_create(*program_manager, vertex_shader_source.get(),
+                          fragment_shader_source.get());
+  }();
   if (program_handle < 0) {
     std::println(std::cerr, "Could not create Program");
     return 1;
@@ -108,11 +131,11 @@ auto main() -> int {
   glEnableVertexArrayAttrib(vao, 0);
   glEnableVertexArrayAttrib(vao, 1);
 
-  auto mesh_manager = mesh_manager_create(2);
-  if (!mesh_manager.valid) {
+  const auto mesh_manager = get_smart_manager<MeshManager>(
+      mesh_manager_create, mesh_manager_destroy_all, 2);
+  if (!mesh_manager->valid) {
     std::println(std::cerr, "Could not create Mesh manager");
-    terminate_application(EXIT_FAILURE, &graphic_context, &program_manager,
-                          &mesh_manager);
+    return 1;
   }
 
   // Top-right, top-left, bottom-left, bottom-right
@@ -122,13 +145,14 @@ auto main() -> int {
       {.position = glm::vec3(-0.5F, -0.5F, 0.0F), .uv = glm::vec2(0.0F, 0.0F)},
       {.position = glm::vec3(0.5F, -0.5F, 0.0F), .uv = glm::vec2(0.0F, 0.0F)}};
   unsigned int indices[] = {0, 1, 2, 0, 2, 3};
-  MeshData mesh_data = {.valid = true,
-                        .vertices = vertices,
-                        .num_vertices = sizeof(vertices) / sizeof(Vertex),
-                        .indices = indices,
-                        .num_indices = sizeof(indices) / sizeof(unsigned int),
-                        .texture_id = 0};
-  const auto mesh_handle = mesh_create(mesh_manager, mesh_data);
+  const MeshData mesh_data = {
+      .valid = true,
+      .vertices = vertices,
+      .num_vertices = sizeof(vertices) / sizeof(Vertex),
+      .indices = indices,
+      .num_indices = sizeof(indices) / sizeof(unsigned int),
+      .texture_id = 0};
+  const auto mesh_handle = mesh_create(*mesh_manager, mesh_data);
 
   glEnable(GL_DEPTH_TEST);
   /* Enable alpha blend for font */
@@ -136,18 +160,17 @@ auto main() -> int {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glBlendEquation(GL_FUNC_ADD);
   glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
-  while (glfwWindowShouldClose(graphic_context.window) == 0) {
+  while (glfwWindowShouldClose(graphic_context->window) == 0) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    auto *const program = program_get(program_manager, program_handle);
+    auto *const program = program_get(*program_manager, program_handle);
     if (program == nullptr || !program->valid) {
       std::println(std::cerr, "Could not get program");
-      terminate_application(EXIT_FAILURE, &graphic_context, &program_manager,
-                            &mesh_manager);
+      return 1;
     }
     glUseProgram(program->program_id);
 
-    auto *const mesh = mesh_get(mesh_manager, mesh_handle);
+    auto *const mesh = mesh_get(*mesh_manager, mesh_handle);
     glBindVertexArray(vao);
     glBindVertexBuffer(0, mesh->vbo, 0, sizeof(Vertex));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
@@ -155,10 +178,9 @@ auto main() -> int {
                    GL_UNSIGNED_INT, nullptr);
 
     // Render
-    glfwSwapBuffers(graphic_context.window);
+    glfwSwapBuffers(graphic_context->window);
     glfwPollEvents();
   }
 
-  terminate_application(EXIT_SUCCESS, &graphic_context, &program_manager,
-                        &mesh_manager);
+  return 0;
 }

@@ -17,19 +17,19 @@ auto mesh_manager_create(int max_num_meshes) -> MeshManager {
                      .max_num_meshes = max_num_meshes};
 }
 
-auto mesh_manager_destroy_all(MeshManager &mesh_manager) -> void {
-  if (!mesh_manager.valid) {
+auto mesh_manager_destroy_all(MeshManager *mesh_manager) -> void {
+  if (!mesh_manager->valid) {
     std::println(std::cerr, "Mesh manager not valid");
     return;
   }
-  for (size_t i = 0; i < mesh_manager.meshes_count; ++i) {
-    glDeleteBuffers(1, &mesh_manager.meshes[i].vbo);
-    glDeleteBuffers(1, &mesh_manager.meshes[i].ebo);
+  for (size_t i = 0; i < mesh_manager->meshes_count; ++i) {
+    glDeleteBuffers(1, &mesh_manager->meshes[i].vbo);
+    glDeleteBuffers(1, &mesh_manager->meshes[i].ebo);
   }
-  delete[] mesh_manager.meshes;
-  mesh_manager.meshes = nullptr;
-  mesh_manager.meshes_count = 0;
-  mesh_manager.valid = false;
+  delete[] mesh_manager->meshes;
+  mesh_manager->meshes = nullptr;
+  mesh_manager->meshes_count = 0;
+  mesh_manager->valid = false;
 }
 
 auto mesh_get(const MeshManager &mesh_manager, MeshHandle handle) -> Mesh * {
@@ -49,13 +49,13 @@ auto mesh_get(const MeshManager &mesh_manager, MeshHandle handle) -> Mesh * {
 }
 
 // Causes internal fragmentation
-auto mesh_destroy(const MeshManager &mesh_manager, const MeshHandle handle)
+auto mesh_destroy(const MeshManager *mesh_manager, const MeshHandle handle)
     -> void {
-  if (!mesh_manager.valid) {
+  if (!mesh_manager->valid) {
     std::println(std::cerr, "Mesh manager not valid");
     return;
   }
-  auto *const mesh = mesh_get(mesh_manager, handle);
+  auto *const mesh = mesh_get(*mesh_manager, handle);
   if (mesh == nullptr) {
     std::println(std::cerr, "Invalid handle");
     return;

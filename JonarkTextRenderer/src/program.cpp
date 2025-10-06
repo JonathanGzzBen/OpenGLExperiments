@@ -16,19 +16,19 @@ auto program_manager_create(int max_num_programs) -> ProgramManager {
                         .max_num_programs = max_num_programs};
 }
 
-auto program_manager_destroy_all(ProgramManager &program_manager) -> void {
-  if (!program_manager.valid) {
+auto program_manager_destroy_all(ProgramManager *program_manager) -> void {
+  if (!program_manager->valid) {
     std::println(stderr, "Invalid program manager");
     return;
   }
-  for (ProgramHandle i = 0; i < program_manager.programs_count; ++i) {
-    program_destroy(program_manager, i);
+  for (ProgramHandle i = 0; i < program_manager->programs_count; ++i) {
+    program_destroy(*program_manager, i);
   }
-  delete[] program_manager.programs;
-  program_manager.programs = nullptr;
-  program_manager.programs_count = 0;
-  program_manager.max_num_programs = 0;
-  program_manager.valid = false;
+  delete[] program_manager->programs;
+  program_manager->programs = nullptr;
+  program_manager->programs_count = 0;
+  program_manager->max_num_programs = 0;
+  program_manager->valid = false;
 }
 
 auto program_get(const ProgramManager &program_manager,
@@ -82,8 +82,7 @@ auto compile_shader(const GLenum shader_type, const char *source)
 }
 
 auto compile_and_link_program(unsigned int vertex_shader,
-                                     unsigned int fragment_shader)
-    -> unsigned int {
+                              unsigned int fragment_shader) -> unsigned int {
   const auto program_id = glCreateProgram();
   glAttachShader(program_id, vertex_shader);
   glAttachShader(program_id, fragment_shader);

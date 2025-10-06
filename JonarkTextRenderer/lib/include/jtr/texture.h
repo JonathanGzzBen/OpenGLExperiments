@@ -32,13 +32,13 @@ auto texture_manager_create(const int max_num_textures) {
   };
 }
 
-auto texture_manager_destroy_all(TextureManager& manager) {
-  for (int i = 0; i < manager.num_textures; ++i) {
+auto texture_manager_destroy_all(TextureManager* manager) {
+  for (int i = 0; i < manager->num_textures; ++i) {
     // destroy texture
   }
-  delete[] manager.textures;
-  manager.num_textures = 0;
-  manager.valid = false;
+  delete[] manager->textures;
+  manager->num_textures = 0;
+  manager->valid = false;
 }
 
 auto texture_get(const TextureManager& manager, TextureHandle handle)
