@@ -12,9 +12,9 @@ using Vertex = struct Vertex {
 
 using MeshData = struct MeshData {
   bool valid;
-  Vertex *vertices;
+  const Vertex *vertices;
   size_t num_vertices;
-  unsigned int *indices;
+  const unsigned int *indices;
   size_t num_indices;
   unsigned int texture_id;
 };

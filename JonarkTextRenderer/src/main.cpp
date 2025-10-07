@@ -57,7 +57,7 @@ auto get_smart_manager(Constructor constructor, int &&max_num,
 // }
 
 auto main() -> int {
-  GraphicContextConfig config{
+  static constexpr GraphicContextConfig config{
       .glfw_error_callback = glfw_error_callback,
       .glfw_window_hints =
           {
@@ -98,7 +98,7 @@ auto main() -> int {
 
   const auto texture_manager = get_smart_manager<TextureManager>(
       texture_manager_create, 2, texture_manager_destroy_all);
-  auto texture_handle =
+  const auto texture_handle =
       texture_create(*texture_manager, font.bitmap, 1024, 1024);
   const auto *texture = texture_get(*texture_manager, texture_handle);
   if (texture == nullptr || !texture->valid) {
@@ -107,9 +107,9 @@ auto main() -> int {
   }
 
   const auto program_handle = [&program_manager]() {
-    auto vertex_shader_source =
+    const auto vertex_shader_source =
         std::unique_ptr<const char[]>(read_file("shaders/vertex.glsl"));
-    auto fragment_shader_source =
+    const auto fragment_shader_source =
         std::unique_ptr<const char[]>(read_file("shaders/fragment.glsl"));
 
     return program_create(*program_manager, vertex_shader_source.get(),
@@ -141,13 +141,13 @@ auto main() -> int {
   }
 
   // Top-right, top-left, bottom-left, bottom-right
-  Vertex vertices[] = {
+  static constexpr Vertex vertices[] = {
       {.position = glm::vec3(0.5F, 0.5F, 0.0F), .uv = glm::vec2(0.0F, 0.0F)},
       {.position = glm::vec3(-0.5F, 0.5F, 0.0F), .uv = glm::vec2(0.0F, 0.0F)},
       {.position = glm::vec3(-0.5F, -0.5F, 0.0F), .uv = glm::vec2(0.0F, 0.0F)},
       {.position = glm::vec3(0.5F, -0.5F, 0.0F), .uv = glm::vec2(0.0F, 0.0F)}};
-  unsigned int indices[] = {0, 1, 2, 0, 2, 3};
-  const MeshData mesh_data = {
+  static constexpr unsigned int indices[] = {0, 1, 2, 0, 2, 3};
+  constexpr MeshData mesh_data = {
       .valid = true,
       .vertices = vertices,
       .num_vertices = sizeof(vertices) / sizeof(Vertex),
@@ -172,7 +172,7 @@ auto main() -> int {
     }
     glUseProgram(program->program_id);
 
-    auto *const mesh = mesh_get(*mesh_manager, mesh_handle);
+    const auto *const mesh = mesh_get(*mesh_manager, mesh_handle);
     glBindVertexArray(vao);
     glBindVertexBuffer(0, mesh->vbo, 0, sizeof(Vertex));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
