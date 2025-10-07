@@ -17,10 +17,10 @@ struct Font {
   int charcode_count;
 };
 
-auto load_font(const unsigned char* font_binary_data, const int charcode_begin,
-               const int charcode_count, const float font_size, const int width,
-               const int height, const int font_atlas_width,
-               const int font_atlas_height) {
+inline auto load_font(const unsigned char* font_binary_data,
+                      const int charcode_begin, const int charcode_count,
+                      const float font_size, const int width, const int height,
+                      const int font_atlas_width, const int font_atlas_height) {
   const auto number_of_fonts = stbtt_GetNumberOfFonts(font_binary_data);
   std::println("Read {} fonts", number_of_fonts);
   if (number_of_fonts != 1) {

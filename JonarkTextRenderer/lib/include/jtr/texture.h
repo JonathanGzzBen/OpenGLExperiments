@@ -19,7 +19,7 @@ using TextureManager = struct TextureManager {
   int max_num_textures;
 };
 
-auto texture_manager_create(const int max_num_textures) -> TextureManager;
+auto texture_manager_create(int max_num_textures) -> TextureManager;
 
 auto texture_manager_destroy_all(TextureManager* manager) -> void;
 
@@ -27,9 +27,9 @@ auto texture_get(const TextureManager& manager, TextureHandle handle)
     -> Texture*;
 
 auto texture_create(TextureManager& texture_manager, const uint8_t* image_data,
-                    const int width, const int height) -> TextureHandle;
+                    int width, int height) -> TextureHandle;
 
-auto texture_destroy(TextureManager& texture_manager,
-                     const TextureHandle handle) -> void;
+auto texture_destroy(TextureManager& texture_manager, TextureHandle handle)
+    -> void;
 
 #endif  // TEXTURE_H
