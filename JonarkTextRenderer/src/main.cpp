@@ -100,8 +100,7 @@ auto main() -> int {
       texture_manager_create, 2, texture_manager_destroy_all);
   const auto texture_handle =
       texture_create(*texture_manager, font.bitmap, 1024, 1024);
-  const auto *texture = texture_get(*texture_manager, texture_handle);
-  if (texture == nullptr || !texture->valid) {
+  if (texture_handle < 0) {
     std::println(std::cerr, "Could not create Texture");
     return 1;
   }
@@ -125,7 +124,8 @@ auto main() -> int {
   glBindVertexArray(vao);
 
   glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
-  glVertexArrayAttribFormat(vao, 1, 2, GL_FLOAT, GL_FALSE, 3);
+  glVertexArrayAttribFormat(vao, 1, 2, GL_FLOAT, GL_FALSE,
+                            offsetof(Vertex, uv));
 
   glVertexArrayAttribBinding(vao, 0, 0);
   glVertexArrayAttribBinding(vao, 1, 0);
@@ -142,10 +142,10 @@ auto main() -> int {
 
   // Top-right, top-left, bottom-left, bottom-right
   static constexpr Vertex vertices[] = {
-      {.position = glm::vec3(0.5F, 0.5F, 0.0F), .uv = glm::vec2(0.0F, 0.0F)},
+      {.position = glm::vec3(0.5F, 0.5F, 0.0F), .uv = glm::vec2(1.0F, 0.0F)},
       {.position = glm::vec3(-0.5F, 0.5F, 0.0F), .uv = glm::vec2(0.0F, 0.0F)},
-      {.position = glm::vec3(-0.5F, -0.5F, 0.0F), .uv = glm::vec2(0.0F, 0.0F)},
-      {.position = glm::vec3(0.5F, -0.5F, 0.0F), .uv = glm::vec2(0.0F, 0.0F)}};
+      {.position = glm::vec3(-0.5F, -0.5F, 0.0F), .uv = glm::vec2(0.0F, 1.0F)},
+      {.position = glm::vec3(0.5F, -0.5F, 0.0F), .uv = glm::vec2(1.0F, 1.0F)}};
   static constexpr unsigned int indices[] = {0, 1, 2, 0, 2, 3};
   constexpr MeshData mesh_data = {
       .valid = true,
@@ -165,7 +165,7 @@ auto main() -> int {
   while (glfwWindowShouldClose(graphic_context->window) == 0) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    auto *const program = program_get(*program_manager, program_handle);
+    const auto *const program = program_get(*program_manager, program_handle);
     if (program == nullptr || !program->valid) {
       std::println(std::cerr, "Could not get program");
       return 1;
@@ -176,6 +176,14 @@ auto main() -> int {
     glBindVertexArray(vao);
     glBindVertexBuffer(0, mesh->vbo, 0, sizeof(Vertex));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+
+    static constexpr int texture_unit = 0;
+    glActiveTexture(GL_TEXTURE0 + texture_unit);
+    const auto *texture = texture_get(*texture_manager, texture_handle);
+    glBindTexture(GL_TEXTURE_2D, texture->texture_id);
+    glUniform1i(glGetUniformLocation(program->program_id, "font_atlas"),
+                texture_unit);
+
     glDrawElements(GL_TRIANGLES, static_cast<int>(mesh->num_indices),
                    GL_UNSIGNED_INT, nullptr);
 
