@@ -93,7 +93,7 @@ auto main() -> int {
   const auto font = []() {
     const auto font_data = read_file("fonts/arial.ttf");
     return load_font(reinterpret_cast<const unsigned char *>(font_data.get()),
-                     32, 95, 64.0F, 600, 600, 1024, 1024);
+                     32, 95, 64.0F, 1024, 1024);
   }();
 
   const auto texture_manager = get_smart_manager<TextureManager>(
@@ -156,6 +156,11 @@ auto main() -> int {
       .texture_id = 0};
   const auto mesh_handle = mesh_create(*mesh_manager, mesh_data);
 
+  const auto *const texture = texture_get(*texture_manager, texture_handle);
+  auto text_mesh_handle =
+      text_get_mesh(font, mesh_manager.get(), glm::vec2(0.0F, 0.0F), "Hola",
+                    2.0F, 2.0F / 600.0F, texture->texture_id);
+
   glEnable(GL_DEPTH_TEST);
   /* Enable alpha blend for font */
   glEnable(GL_BLEND);
@@ -184,7 +189,17 @@ auto main() -> int {
     glUniform1i(glGetUniformLocation(program->program_id, "font_atlas"),
                 texture_unit);
 
-    glDrawElements(GL_TRIANGLES, static_cast<int>(mesh->num_indices),
+    const auto *const text_mesh = mesh_get(*mesh_manager, text_mesh_handle);
+    if (text_mesh == nullptr || !text_mesh->valid) {
+      std::println(std::cerr, "Could not get text_mesh");
+      return 1;
+    }
+
+    glBindVertexArray(vao);
+    glBindVertexBuffer(0, text_mesh->vbo, 0, sizeof(Vertex));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, text_mesh->ebo);
+
+    glDrawElements(GL_TRIANGLES, static_cast<int>(text_mesh->num_indices),
                    GL_UNSIGNED_INT, nullptr);
 
     // Render
