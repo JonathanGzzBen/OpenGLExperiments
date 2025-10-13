@@ -1,5 +1,5 @@
-#define STB_TRUETYPE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STB_TRUETYPE_IMPLEMENTATION
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -8,6 +8,7 @@
 #include <iostream>
 #include <print>
 
+#include "jtr/font.h"
 #include "jtr/graphic_context.h"
 #include "jtr/mesh.h"
 #include "jtr/program.h"
@@ -90,16 +91,26 @@ auto main() -> int {
     return 1;
   }
 
-  const auto font = []() {
+  static constexpr int font_atlas_width = 1024;
+  static constexpr int font_atlas_height = 1024;
+  auto font_manager = get_smart_manager<FontManager>(font_manager_create, 1,
+                                                     font_manager_destroy_all);
+  const auto font_handle = [&font_manager]() {
     const auto font_data = read_file("fonts/arial.ttf");
-    return load_font(reinterpret_cast<const unsigned char *>(font_data.get()),
-                     32, 95, 64.0F, 1024, 1024);
+    return font_create(font_manager.get(),
+                       reinterpret_cast<const unsigned char *>(font_data.get()),
+                       32, 95, 64.0F, font_atlas_width, font_atlas_height);
   }();
+  if (font_handle < 0) {
+    std::println(stderr, "Could not load font");
+    return 1;
+  }
+  const auto *const font = font_get(*font_manager, font_handle);
 
   const auto texture_manager = get_smart_manager<TextureManager>(
       texture_manager_create, 2, texture_manager_destroy_all);
-  const auto texture_handle =
-      texture_create(*texture_manager, font.bitmap, 1024, 1024);
+  const auto texture_handle = texture_create(
+      *texture_manager, font->bitmap, font_atlas_width, font_atlas_height);
   if (texture_handle < 0) {
     std::println(std::cerr, "Could not create Texture");
     return 1;
@@ -158,8 +169,8 @@ auto main() -> int {
 
   const auto *const texture = texture_get(*texture_manager, texture_handle);
   auto text_mesh_handle =
-      text_get_mesh(font, mesh_manager.get(), glm::vec2(0.0F, 0.0F), "Hola",
-                    2.0F, 2.0F / 600.0F, texture->texture_id);
+      text_create_mesh(*font, mesh_manager.get(), glm::vec2(0.0F, 0.0F), "Hola",
+                       1.0F, 2.0F / 600.0F, texture->texture_id);
 
   glEnable(GL_DEPTH_TEST);
   /* Enable alpha blend for font */
