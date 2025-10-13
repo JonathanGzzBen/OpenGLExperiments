@@ -223,18 +223,8 @@ auto main() -> int {
     }
 
     glBindVertexArray(vao);
-    glBindVertexBuffer(0, text_mesh->vbo, 0, sizeof(Vertex));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, text_mesh->ebo);
-
-    glDrawElements(GL_TRIANGLES, static_cast<int>(text_mesh->num_indices),
-                   GL_UNSIGNED_INT, nullptr);
-
-    glBindVertexBuffer(0, second_text_mesh->vbo, 0, sizeof(Vertex));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, second_text_mesh->ebo);
-
-    glDrawElements(GL_TRIANGLES,
-                   static_cast<int>(second_text_mesh->num_indices),
-                   GL_UNSIGNED_INT, nullptr);
+    mesh_draw(*mesh_manager, text_mesh_handle);
+    mesh_draw(*mesh_manager, second_text_mesh_handle);
 
     // Render
     glfwSwapBuffers(graphic_context->window);

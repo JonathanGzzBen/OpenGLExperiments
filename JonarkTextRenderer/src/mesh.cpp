@@ -109,3 +109,19 @@ auto mesh_create(MeshManager &mesh_manager, const MeshData &mesh_data)
   };
   return handle;
 }
+
+auto mesh_draw(const MeshManager &mesh_manager, const MeshHandle handle)
+    -> void {
+  const auto *mesh = mesh_get(mesh_manager, handle);
+  if (mesh == nullptr || mesh->valid == false) {
+    std::println(std::cerr, "Invalid handle");
+    return;
+  }
+  // Hard coded binding index, should come from a VAO manager/object
+  glBindVertexBuffer(0, mesh->vbo, 0, sizeof(Vertex));
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+
+  glDrawElements(GL_TRIANGLES, static_cast<int>(mesh->num_indices),
+                 GL_UNSIGNED_INT, nullptr);
+  glBindVertexBuffer(0, 0, 0, sizeof(Vertex));
+}
