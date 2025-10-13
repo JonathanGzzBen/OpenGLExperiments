@@ -14,6 +14,7 @@
 #include "jtr/program.h"
 #include "jtr/text.h"
 #include "jtr/texture.h"
+#include "jtr/vertex_array_object.h"
 
 auto glfw_error_callback(int error, const char *description) -> void {
   std::println(std::cerr, "GLFW error {}: {}", error, description);
@@ -130,19 +131,34 @@ auto main() -> int {
     return 1;
   }
 
-  unsigned int vao;
-  glCreateVertexArrays(1, &vao);
-  glBindVertexArray(vao);
+  const auto vao_manager = get_smart_manager<VertexArrayObjectManager>(
+      vertex_array_object_manager_create, 1,
+      vertex_array_object_manager_destroy_all);
 
-  glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
-  glVertexArrayAttribFormat(vao, 1, 2, GL_FLOAT, GL_FALSE,
-                            offsetof(Vertex, uv));
-
-  glVertexArrayAttribBinding(vao, 0, 0);
-  glVertexArrayAttribBinding(vao, 1, 0);
-
-  glEnableVertexArrayAttrib(vao, 0);
-  glEnableVertexArrayAttrib(vao, 1);
+  const std::vector attributes = {
+      VertexArrayAttributeEntry{.index = 0,
+                                .size = 3,
+                                .type = GL_FLOAT,
+                                .normalized = GL_FALSE,
+                                .relative_offset = 0,
+                                .binding_index = 0},
+      VertexArrayAttributeEntry{.index = 1,
+                                .size = 2,
+                                .type = GL_FLOAT,
+                                .normalized = GL_FALSE,
+                                .relative_offset = offsetof(Vertex, uv),
+                                .binding_index = 0}};
+  const auto vao_handle = vertex_array_object_create(
+      vao_manager.get(), attributes.data(), attributes.size());
+  if (vao_handle < 0) {
+    std::println(std::cerr, "Could not create VAO");
+    return 1;
+  }
+  const auto *const vao = vertex_array_object_get(*vao_manager, vao_handle);
+  if (vao == nullptr || !vao->valid) {
+    std::println(std::cerr, "Created VAO is invalid");
+    return 1;
+  }
 
   const auto mesh_manager = get_smart_manager<MeshManager>(
       mesh_manager_create, 3, mesh_manager_destroy_all);
@@ -167,17 +183,18 @@ auto main() -> int {
       .texture_id = 0};
   const auto mesh_handle = mesh_create(*mesh_manager, mesh_data);
 
+  static constexpr float pixel_scale = 2.0F / 600.0F;
   const auto *const texture = texture_get(*texture_manager, texture_handle);
   const auto text_mesh_handle =
       text_create_mesh(*font, mesh_manager.get(), glm::vec2(0.0F, 0.0F), "Hola",
-                       1.0F, 2.0F / 600.0F, texture->texture_id);
+                       1.0F, pixel_scale, texture->texture_id);
   if (text_mesh_handle < 0) {
     std::println(stderr, "Could not create text_mesh");
     return 1;
   }
   const auto second_text_mesh_handle =
       text_create_mesh(*font, mesh_manager.get(), glm::vec2(0.0F, 0.5F),
-                       "XDDDD", 1.0F, 2.0F / 600.0F, texture->texture_id);
+                       "XDDDD", 1.0F, pixel_scale, texture->texture_id);
   if (second_text_mesh_handle < 0) {
     std::println(stderr, "Could not create second_text_mesh");
     return 1;
@@ -200,7 +217,7 @@ auto main() -> int {
     glUseProgram(program->program_id);
 
     const auto *const mesh = mesh_get(*mesh_manager, mesh_handle);
-    glBindVertexArray(vao);
+    glBindVertexArray(vao->vao_id);
     glBindVertexBuffer(0, mesh->vbo, 0, sizeof(Vertex));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
 
@@ -210,19 +227,7 @@ auto main() -> int {
     glUniform1i(glGetUniformLocation(program->program_id, "font_atlas"),
                 texture_unit);
 
-    const auto *const text_mesh = mesh_get(*mesh_manager, text_mesh_handle);
-    if (text_mesh == nullptr || !text_mesh->valid) {
-      std::println(std::cerr, "Could not get text_mesh");
-      return 1;
-    }
-    const auto *const second_text_mesh =
-        mesh_get(*mesh_manager, second_text_mesh_handle);
-    if (second_text_mesh == nullptr || !second_text_mesh->valid) {
-      std::println(std::cerr, "Could not get second_t_mesh");
-      return 1;
-    }
-
-    glBindVertexArray(vao);
+    glBindVertexArray(vao->vao_id);
     mesh_draw(*mesh_manager, text_mesh_handle);
     mesh_draw(*mesh_manager, second_text_mesh_handle);
 
