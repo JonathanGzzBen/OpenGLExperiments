@@ -145,7 +145,7 @@ auto main() -> int {
   glEnableVertexArrayAttrib(vao, 1);
 
   const auto mesh_manager = get_smart_manager<MeshManager>(
-      mesh_manager_create, 2, mesh_manager_destroy_all);
+      mesh_manager_create, 3, mesh_manager_destroy_all);
   if (!mesh_manager->valid) {
     std::println(std::cerr, "Could not create Mesh manager");
     return 1;
@@ -168,9 +168,20 @@ auto main() -> int {
   const auto mesh_handle = mesh_create(*mesh_manager, mesh_data);
 
   const auto *const texture = texture_get(*texture_manager, texture_handle);
-  auto text_mesh_handle =
+  const auto text_mesh_handle =
       text_create_mesh(*font, mesh_manager.get(), glm::vec2(0.0F, 0.0F), "Hola",
                        1.0F, 2.0F / 600.0F, texture->texture_id);
+  if (text_mesh_handle < 0) {
+    std::println(stderr, "Could not create text_mesh");
+    return 1;
+  }
+  const auto second_text_mesh_handle =
+      text_create_mesh(*font, mesh_manager.get(), glm::vec2(0.0F, 0.5F),
+                       "XDDDD", 1.0F, 2.0F / 600.0F, texture->texture_id);
+  if (second_text_mesh_handle < 0) {
+    std::println(stderr, "Could not create second_text_mesh");
+    return 1;
+  }
 
   glEnable(GL_DEPTH_TEST);
   /* Enable alpha blend for font */
@@ -195,7 +206,6 @@ auto main() -> int {
 
     static constexpr int texture_unit = 0;
     glActiveTexture(GL_TEXTURE0 + texture_unit);
-    const auto *texture = texture_get(*texture_manager, texture_handle);
     glBindTexture(GL_TEXTURE_2D, texture->texture_id);
     glUniform1i(glGetUniformLocation(program->program_id, "font_atlas"),
                 texture_unit);
@@ -205,12 +215,25 @@ auto main() -> int {
       std::println(std::cerr, "Could not get text_mesh");
       return 1;
     }
+    const auto *const second_text_mesh =
+        mesh_get(*mesh_manager, second_text_mesh_handle);
+    if (second_text_mesh == nullptr || !second_text_mesh->valid) {
+      std::println(std::cerr, "Could not get second_t_mesh");
+      return 1;
+    }
 
     glBindVertexArray(vao);
     glBindVertexBuffer(0, text_mesh->vbo, 0, sizeof(Vertex));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, text_mesh->ebo);
 
     glDrawElements(GL_TRIANGLES, static_cast<int>(text_mesh->num_indices),
+                   GL_UNSIGNED_INT, nullptr);
+
+    glBindVertexBuffer(0, second_text_mesh->vbo, 0, sizeof(Vertex));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, second_text_mesh->ebo);
+
+    glDrawElements(GL_TRIANGLES,
+                   static_cast<int>(second_text_mesh->num_indices),
                    GL_UNSIGNED_INT, nullptr);
 
     // Render
