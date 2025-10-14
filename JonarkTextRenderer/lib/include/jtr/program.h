@@ -3,11 +3,6 @@
 
 using ProgramHandle = int;
 
-using Program = struct Program {
-  bool valid;
-  unsigned int program_id;
-};
-
 using ProgramManager = struct ProgramManager {
   bool valid;
   // Program *programs;
