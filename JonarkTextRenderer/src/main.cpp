@@ -180,21 +180,20 @@ auto main() -> int {
       .num_vertices = sizeof(vertices) / sizeof(Vertex),
       .indices = indices,
       .num_indices = sizeof(indices) / sizeof(unsigned int),
-      .texture_id = 0};
+  };
   const auto mesh_handle = mesh_create(*mesh_manager, mesh_data);
 
   static constexpr float pixel_scale = 2.0F / 600.0F;
-  const auto *const texture = texture_get(*texture_manager, texture_handle);
   const auto text_mesh_handle =
       text_create_mesh(*font, mesh_manager.get(), glm::vec2(0.0F, 0.0F), "Hola",
-                       1.0F, pixel_scale, texture->texture_id);
+                       1.0F, pixel_scale);
   if (text_mesh_handle < 0) {
     std::println(stderr, "Could not create text_mesh");
     return 1;
   }
   const auto second_text_mesh_handle =
       text_create_mesh(*font, mesh_manager.get(), glm::vec2(0.0F, 0.5F),
-                       "XDDDD", 1.0F, pixel_scale, texture->texture_id);
+                       "XDDDD", 1.0F, pixel_scale);
   if (second_text_mesh_handle < 0) {
     std::println(stderr, "Could not create second_text_mesh");
     return 1;
@@ -217,8 +216,7 @@ auto main() -> int {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
 
     static constexpr int texture_unit = 0;
-    glActiveTexture(GL_TEXTURE0 + texture_unit);
-    glBindTexture(GL_TEXTURE_2D, texture->texture_id);
+    texture_bind(*texture_manager, texture_handle, texture_unit);
     program_set_uniform(*program_manager, program_handle, "font_atlas",
                         texture_unit);
 

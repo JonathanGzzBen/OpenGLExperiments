@@ -7,9 +7,9 @@ auto texture_manager_create(const int max_num_textures) -> TextureManager {
   }
   return TextureManager{
       .valid = true,
-      .textures = new Texture[max_num_textures],
       .num_textures = 0,
       .max_num_textures = max_num_textures,
+      .texture_ids = new unsigned int[max_num_textures],
   };
 }
 
@@ -17,26 +17,24 @@ auto texture_manager_destroy_all(TextureManager* manager) -> void {
   for (int i = 0; i < manager->num_textures; ++i) {
     texture_destroy(*manager, static_cast<TextureHandle>(i));
   }
-  delete[] manager->textures;
+  delete[] manager->texture_ids;
+  manager->texture_ids = nullptr;
   manager->num_textures = 0;
   manager->valid = false;
 }
 
-auto texture_get(const TextureManager& manager, const TextureHandle handle)
-    -> Texture* {
+auto texture_validate_handle(const TextureManager& manager,
+                             const TextureHandle handle) -> bool {
   if (!manager.valid) {
     std::println(stderr, "Texture Manager not valid");
-    return nullptr;
+    return false;
   }
-  if (handle < 0 || manager.max_num_textures <= handle) {
-    std::println(stderr, "Invalid handle");
-    return nullptr;
+  if (handle < 0 || manager.max_num_textures <= handle ||
+      manager.texture_ids[handle] < 0) {
+    std::println(stderr, "Invalid Texture handle");
+    return false;
   }
-  if (!manager.textures[handle].valid) {
-    std::println(std::cerr, "Texture for handle not valid");
-    return nullptr;
-  }
-  return &manager.textures[handle];
+  return true;
 }
 
 auto texture_create(TextureManager& texture_manager, const uint8_t* image_data,
@@ -60,15 +58,12 @@ auto texture_create(TextureManager& texture_manager, const uint8_t* image_data,
   glGenerateTextureMipmap(texture_id);
 
   const auto handle = texture_manager.num_textures++;
-  texture_manager.textures[handle] = Texture{
-      .valid = true,
-      .texture_id = texture_id,
-  };
+  texture_manager.texture_ids[handle] = texture_id;
   return handle;
 }
 
-auto texture_destroy(TextureManager& texture_manager, TextureHandle handle)
-    -> void {
+auto texture_destroy(const TextureManager& texture_manager,
+                     const TextureHandle handle) -> void {
   if (!texture_manager.valid) {
     std::println(stderr, "Texture Manager not valid");
     return;
@@ -77,10 +72,16 @@ auto texture_destroy(TextureManager& texture_manager, TextureHandle handle)
     std::println(stderr, "Invalid handle");
     return;
   }
-  if (!texture_manager.textures[handle].valid) {
-    std::println(std::cerr, "Texture for handle not valid");
+  glDeleteTextures(1, &texture_manager.texture_ids[handle]);
+  texture_manager.texture_ids[handle] = -1;
+}
+
+auto texture_bind(const TextureManager& manager, const TextureHandle handle,
+                  const int texture_unit) -> void {
+  if (!texture_validate_handle(manager, handle)) {
+    std::println(stderr, "Invalid texture handle");
     return;
   }
-  glDeleteTextures(1, &texture_manager.textures[handle].texture_id);
-  texture_manager.textures[handle] = Texture{.valid = false};
+  glActiveTexture(GL_TEXTURE0 + texture_unit);
+  glBindTexture(GL_TEXTURE_2D, manager.texture_ids[handle]);
 }

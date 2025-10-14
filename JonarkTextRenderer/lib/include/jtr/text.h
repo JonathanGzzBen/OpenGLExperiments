@@ -9,8 +9,7 @@
 
 inline auto text_create_mesh(const Font& font, MeshManager* manager,
                              const glm::vec2 position, const std::string& text,
-                             const float size, const float pixel_scale,
-                             const unsigned int font_atlas_texture_id)
+                             const float size, const float pixel_scale)
     -> MeshHandle {
   glm::vec2 cursor_position = position;
   const unsigned int num_vertices = text.length() * 4;
@@ -78,7 +77,6 @@ inline auto text_create_mesh(const Font& font, MeshManager* manager,
       .num_vertices = num_vertices,
       .indices = indices,
       .num_indices = 6 * text.length(),
-      .texture_id = font_atlas_texture_id,
   };
   const auto mesh_handle = mesh_create(*manager, mesh_data);
   delete vertices;

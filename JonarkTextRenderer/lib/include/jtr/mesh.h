@@ -16,7 +16,6 @@ using MeshData = struct MeshData {
   size_t num_vertices;
   const unsigned int *indices;
   size_t num_indices;
-  unsigned int texture_id;
 };
 
 using Mesh = struct Mesh {
