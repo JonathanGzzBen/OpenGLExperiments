@@ -4,16 +4,18 @@
 
 #include <print>
 
-auto program_manager_create(int max_num_programs) -> ProgramManager {
+auto program_manager_create(const int max_num_programs) -> ProgramManager {
   if (max_num_programs <= 0) {
     std::println(stderr, "Invalid max number of programs");
     return ProgramManager{.valid = false};
   }
-  auto *programs_ptr = new Program[max_num_programs];
+  auto *programs_ids_ptr = new unsigned int[max_num_programs];
   return ProgramManager{.valid = true,
-                        .programs = programs_ptr,
                         .programs_count = 0,
-                        .max_num_programs = max_num_programs};
+                        .max_num_programs = max_num_programs,
+                        .program_ids = programs_ids_ptr
+
+  };
 }
 
 auto program_manager_destroy_all(ProgramManager *program_manager) -> void {
@@ -24,41 +26,35 @@ auto program_manager_destroy_all(ProgramManager *program_manager) -> void {
   for (ProgramHandle i = 0; i < program_manager->programs_count; ++i) {
     program_destroy(*program_manager, i);
   }
-  delete[] program_manager->programs;
-  program_manager->programs = nullptr;
+  delete[] program_manager->program_ids;
+  program_manager->program_ids = nullptr;
   program_manager->programs_count = 0;
   program_manager->max_num_programs = 0;
   program_manager->valid = false;
 }
 
-auto program_get(const ProgramManager &program_manager,
-                 const ProgramHandle handle) -> Program * {
+auto program_validate_handle(const ProgramManager &program_manager,
+                             const ProgramHandle handle) -> bool {
   if (!program_manager.valid) {
     std::println(stderr, "Invalid program manager");
-    return nullptr;
+    return false;
   }
   if (handle < 0 || program_manager.programs_count <= handle) {
     std::println(stderr, "Invalid handle");
-    return nullptr;
+    return false;
   }
-  return &program_manager.programs[handle];
+  return true;
 }
 
 // Causes internal fragmentation
-auto program_destroy(const ProgramManager &program_manager,
-                     const ProgramHandle handle) -> void {
-  auto *program = program_get(program_manager, handle);
-  if (program == nullptr) {
-    std::println(stderr, "Invalid program handle");
-    return;
-  }
-  if (!program->valid) {
+auto program_destroy(const ProgramManager &manager, const ProgramHandle handle)
+    -> void {
+  if (!program_validate_handle(manager, handle)) {
     std::println(stderr, "Invalid program");
     return;
   }
-  glDeleteProgram(program->program_id);
-  program->program_id = 0;
-  program->valid = false;
+  glDeleteProgram(manager.program_ids[handle]);
+  manager.program_ids[handle] = 0;
 }
 
 auto compile_shader(const GLenum shader_type, const char *source)
@@ -81,8 +77,9 @@ auto compile_shader(const GLenum shader_type, const char *source)
   return shader_id;
 }
 
-auto compile_and_link_program(unsigned int vertex_shader,
-                              unsigned int fragment_shader) -> unsigned int {
+auto compile_and_link_program(const unsigned int vertex_shader,
+                              const unsigned int fragment_shader)
+    -> unsigned int {
   const auto program_id = glCreateProgram();
   glAttachShader(program_id, vertex_shader);
   glAttachShader(program_id, fragment_shader);
@@ -130,7 +127,29 @@ auto program_create(ProgramManager &program_manager,
   }
 
   const int handle = program_manager.programs_count++;
-  program_manager.programs[handle] =
-      Program{.valid = true, .program_id = program_id};
+  program_manager.program_ids[handle] = program_id;
   return handle;
+}
+
+auto program_use(const ProgramManager &manager, const ProgramHandle handle)
+    -> void {
+  if (!program_validate_handle(manager, handle)) {
+    std::println(stderr, "Invalid program");
+    return;
+  }
+  glUseProgram(manager.program_ids[handle]);
+}
+
+template <>
+auto program_set_uniform<int>(const ProgramManager &program_manager,
+                              const ProgramHandle handle,
+                              const char *uniform_name, const int value)
+    -> void {
+  if (!program_validate_handle(program_manager, handle)) {
+    std::println(stderr, "Invalid program");
+    return;
+  }
+  glUniform1i(
+      glGetUniformLocation(program_manager.program_ids[handle], uniform_name),
+      value);
 }

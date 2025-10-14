@@ -23,7 +23,8 @@ auto vertex_array_object_manager_destroy_all(VertexArrayObjectManager* manager)
     std::println("VertexArrayObjectManager not valid");
     return;
   }
-  for (VertexArrayObjectHandle handle = 0; handle < manager->max_num_vaos; ++handle) {
+  for (VertexArrayObjectHandle handle = 0; handle < manager->max_num_vaos;
+       ++handle) {
     vertex_array_object_destroy(*manager, handle);
   }
   delete manager->vaos;

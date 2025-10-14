@@ -209,12 +209,7 @@ auto main() -> int {
   while (glfwWindowShouldClose(graphic_context->window) == 0) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    const auto *const program = program_get(*program_manager, program_handle);
-    if (program == nullptr || !program->valid) {
-      std::println(std::cerr, "Could not get program");
-      return 1;
-    }
-    glUseProgram(program->program_id);
+    program_use(*program_manager, program_handle);
 
     const auto *const mesh = mesh_get(*mesh_manager, mesh_handle);
     glBindVertexArray(vao->vao_id);
@@ -224,8 +219,8 @@ auto main() -> int {
     static constexpr int texture_unit = 0;
     glActiveTexture(GL_TEXTURE0 + texture_unit);
     glBindTexture(GL_TEXTURE_2D, texture->texture_id);
-    glUniform1i(glGetUniformLocation(program->program_id, "font_atlas"),
-                texture_unit);
+    program_set_uniform(*program_manager, program_handle, "font_atlas",
+                        texture_unit);
 
     glBindVertexArray(vao->vao_id);
     mesh_draw(*mesh_manager, text_mesh_handle);
