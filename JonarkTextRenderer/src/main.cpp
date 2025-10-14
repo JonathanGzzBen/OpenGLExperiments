@@ -210,15 +210,18 @@ auto main() -> int {
 
     program_use(*program_manager, program_handle);
 
-    const auto *const mesh = mesh_get(*mesh_manager, mesh_handle);
-    glBindVertexArray(vao->vao_id);
-    glBindVertexBuffer(0, mesh->vbo, 0, sizeof(Vertex));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+    // Draw font atlas
+    // const auto *const mesh = mesh_get(*mesh_manager, mesh_handle);
+    // glBindVertexArray(vao->vao_id);
+    // glBindVertexBuffer(0, mesh->vbo, 0, sizeof(Vertex));
+    // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
 
-    static constexpr int texture_unit = 0;
-    texture_bind(*texture_manager, texture_handle, texture_unit);
-    program_set_uniform(*program_manager, program_handle, "font_atlas",
-                        texture_unit);
+    static constexpr int font_atlas_texture_unit = 0;
+    static constexpr auto font_atlas_texture_uniform_name = "font_atlas";
+    texture_bind(*texture_manager, texture_handle, font_atlas_texture_unit);
+    program_set_uniform(*program_manager, program_handle,
+                        font_atlas_texture_uniform_name,
+                        font_atlas_texture_unit);
 
     glBindVertexArray(vao->vao_id);
     mesh_draw(*mesh_manager, text_mesh_handle);
