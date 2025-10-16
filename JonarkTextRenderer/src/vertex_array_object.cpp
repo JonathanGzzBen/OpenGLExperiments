@@ -7,14 +7,12 @@
 
 auto vertex_array_object_manager_create(const int max_num_vaos)
     -> VertexArrayObjectManager {
-  auto* vaos = new VertexArrayObject[max_num_vaos];
+  auto* vao_ids = new unsigned int[max_num_vaos];
 
-  return VertexArrayObjectManager{
-      .valid = true,
-      .vaos = vaos,
-      .vao_count = 0,
-      .max_num_vaos = max_num_vaos,
-  };
+  return VertexArrayObjectManager{.valid = true,
+                                  .vao_count = 0,
+                                  .max_num_vaos = max_num_vaos,
+                                  .vao_ids = vao_ids};
 }
 
 auto vertex_array_object_manager_destroy_all(VertexArrayObjectManager* manager)
@@ -27,44 +25,44 @@ auto vertex_array_object_manager_destroy_all(VertexArrayObjectManager* manager)
        ++handle) {
     vertex_array_object_destroy(*manager, handle);
   }
-  delete manager->vaos;
-  manager->vaos = nullptr;
+  delete manager->vao_ids;
+  ;
+  manager->vao_ids = nullptr;
   manager->vao_count = 0;
   manager->max_num_vaos = 0;
   manager->valid = false;
 }
 
-auto vertex_array_object_get(const VertexArrayObjectManager& manager,
-                             const VertexArrayObjectHandle handle)
-    -> VertexArrayObject* {
+auto vertex_array_object_validate_handle(
+    const VertexArrayObjectManager& manager,
+    const VertexArrayObjectHandle handle) -> bool {
   if (!manager.valid) {
     std::println("VertexArrayObjectManager not valid");
-    return nullptr;
+    return false;
   }
-  if (manager.vaos == nullptr || manager.vao_count == 0) {
+  if (manager.vao_ids == nullptr || manager.vao_count == 0) {
     std::println("VertexArrayObjectManager not valid");
-    return nullptr;
+    return false;
   }
-  if (manager.vao_count <= handle || !manager.vaos[handle].valid) {
+  if (manager.vao_count <= handle || manager.vao_ids[handle] < 0) {
     std::println(std::cerr, "VertexArrayObjectHandle not valid");
-    return nullptr;
+    return false;
   }
-  return &manager.vaos[handle];
+  return true;
 }
 
 auto vertex_array_object_destroy(const VertexArrayObjectManager& manager,
-                                 VertexArrayObjectHandle handle) -> void {
+                                 const VertexArrayObjectHandle handle) -> void {
   if (!manager.valid) {
     std::println(std::cerr, "Mesh manager not valid");
     return;
   }
-  auto* const vao = vertex_array_object_get(manager, handle);
-  if (vao == nullptr || !vao->valid) {
+  if (!vertex_array_object_validate_handle(manager, handle)) {
     std::println(std::cerr, "Invalid handle");
     return;
   }
-  glDeleteVertexArrays(1, &vao->vao_id);
-  vao->valid = false;
+  glDeleteVertexArrays(1, &manager.vao_ids[handle]);
+  manager.vao_ids[handle] = -1;
 }
 
 auto vertex_array_object_create(VertexArrayObjectManager* manager,
@@ -83,6 +81,19 @@ auto vertex_array_object_create(VertexArrayObjectManager* manager,
   }
 
   const auto handle = manager->vao_count++;
-  manager->vaos[handle] = VertexArrayObject{.valid = true, .vao_id = vao};
+  manager->vao_ids[handle] = vao;
   return handle;
+}
+
+auto vertex_array_object_bind(const VertexArrayObjectManager& manager,
+                              const VertexArrayObjectHandle handle) -> void {
+  if (!manager.valid) {
+    std::println(std::cerr, "Mesh manager not valid");
+    return;
+  }
+  if (!vertex_array_object_validate_handle(manager, handle)) {
+    std::println(std::cerr, "Invalid handle");
+    return;
+  }
+  glBindVertexArray(manager.vao_ids[handle]);
 }

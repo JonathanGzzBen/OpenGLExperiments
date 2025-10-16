@@ -154,11 +154,6 @@ auto main() -> int {
     std::println(std::cerr, "Could not create VAO");
     return 1;
   }
-  const auto *const vao = vertex_array_object_get(*vao_manager, vao_handle);
-  if (vao == nullptr || !vao->valid) {
-    std::println(std::cerr, "Created VAO is invalid");
-    return 1;
-  }
 
   const auto mesh_manager = get_smart_manager<MeshManager>(
       mesh_manager_create, 3, mesh_manager_destroy_all);
@@ -223,7 +218,7 @@ auto main() -> int {
                         font_atlas_texture_uniform_name,
                         font_atlas_texture_unit);
 
-    glBindVertexArray(vao->vao_id);
+    vertex_array_object_bind(*vao_manager, vao_handle);
     mesh_draw(*mesh_manager, text_mesh_handle);
     mesh_draw(*mesh_manager, second_text_mesh_handle);
 

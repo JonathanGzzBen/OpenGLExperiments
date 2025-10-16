@@ -11,9 +11,10 @@ using VertexArrayObject = struct VertexArrayObject {
 
 using VertexArrayObjectManager = struct VertexArrayObjectManager {
   bool valid;
-  VertexArrayObject *vaos;
   int vao_count;
   int max_num_vaos;
+
+  unsigned int *vao_ids;
 };
 
 using VertexArrayAttributeEntry = struct {
@@ -28,12 +29,12 @@ using VertexArrayAttributeEntry = struct {
 auto vertex_array_object_manager_create(int max_num_vaos)
     -> VertexArrayObjectManager;
 
-auto vertex_array_object_manager_destroy_all(
-    VertexArrayObjectManager *manager) -> void;
+auto vertex_array_object_manager_destroy_all(VertexArrayObjectManager *manager)
+    -> void;
 
-auto vertex_array_object_get(const VertexArrayObjectManager &manager,
+auto vertex_array_object_validate_handle(const VertexArrayObjectManager &manager,
                              VertexArrayObjectHandle handle)
-    -> VertexArrayObject *;
+    -> bool;
 
 auto vertex_array_object_destroy(const VertexArrayObjectManager &manager,
                                  VertexArrayObjectHandle handle) -> void;
@@ -42,5 +43,8 @@ auto vertex_array_object_create(VertexArrayObjectManager *manager,
                                 const VertexArrayAttributeEntry *attributes,
                                 size_t attributes_len)
     -> VertexArrayObjectHandle;
+
+auto vertex_array_object_bind(const VertexArrayObjectManager &manager,
+                              VertexArrayObjectHandle handle) -> void;
 
 #endif  // VERTEX_ARRAY_OBJECT_H
