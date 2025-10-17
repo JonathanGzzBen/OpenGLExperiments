@@ -110,9 +110,9 @@ auto main() -> int {
 
   const auto texture_manager = get_smart_manager<TextureManager>(
       texture_manager_create, 2, texture_manager_destroy_all);
-  const auto texture_handle = texture_create(
+  const auto font_atlas_texture_handle = texture_create(
       *texture_manager, font->bitmap, font_atlas_width, font_atlas_height);
-  if (texture_handle < 0) {
+  if (font_atlas_texture_handle < 0) {
     std::println(std::cerr, "Could not create Texture");
     return 1;
   }
@@ -163,20 +163,22 @@ auto main() -> int {
   }
 
   // Top-right, top-left, bottom-left, bottom-right
+  /*
   static constexpr Vertex vertices[] = {
       {.position = glm::vec3(0.5F, 0.5F, 0.0F), .uv = glm::vec2(1.0F, 0.0F)},
       {.position = glm::vec3(-0.5F, 0.5F, 0.0F), .uv = glm::vec2(0.0F, 0.0F)},
       {.position = glm::vec3(-0.5F, -0.5F, 0.0F), .uv = glm::vec2(0.0F, 1.0F)},
       {.position = glm::vec3(0.5F, -0.5F, 0.0F), .uv = glm::vec2(1.0F, 1.0F)}};
   static constexpr unsigned int indices[] = {0, 1, 2, 0, 2, 3};
-  constexpr MeshData mesh_data = {
+  constexpr MeshData font_atlas_mesh_data = {
       .valid = true,
       .vertices = vertices,
       .num_vertices = sizeof(vertices) / sizeof(Vertex),
       .indices = indices,
       .num_indices = sizeof(indices) / sizeof(unsigned int),
   };
-  const auto mesh_handle = mesh_create(*mesh_manager, mesh_data);
+  const auto font_atlas_mesh_handle = mesh_create(*mesh_manager, font_atlas_mesh_data);
+  */
 
   static constexpr float pixel_scale = 2.0F / 600.0F;
   const auto text_mesh_handle =
@@ -213,7 +215,7 @@ auto main() -> int {
 
     static constexpr int font_atlas_texture_unit = 0;
     static constexpr auto font_atlas_texture_uniform_name = "font_atlas";
-    texture_bind(*texture_manager, texture_handle, font_atlas_texture_unit);
+    texture_bind(*texture_manager, font_atlas_texture_handle, font_atlas_texture_unit);
     program_set_uniform(*program_manager, program_handle,
                         font_atlas_texture_uniform_name,
                         font_atlas_texture_unit);
