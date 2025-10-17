@@ -5,7 +5,6 @@ using ProgramHandle = int;
 
 using ProgramManager = struct ProgramManager {
   bool valid;
-  // Program *programs;
   int programs_count;
   int max_num_programs;
   unsigned int *program_ids;

@@ -4,11 +4,6 @@
 
 using VertexArrayObjectHandle = int;
 
-using VertexArrayObject = struct VertexArrayObject {
-  bool valid;
-  unsigned int vao_id;
-};
-
 using VertexArrayObjectManager = struct VertexArrayObjectManager {
   bool valid;
   int vao_count;
