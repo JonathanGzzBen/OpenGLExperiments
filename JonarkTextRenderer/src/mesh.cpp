@@ -10,64 +10,73 @@ auto mesh_manager_create(int max_num_meshes) -> MeshManager {
     std::println(std::cerr, "Invalid max number of meshes");
     return {.valid = false};
   }
-  const auto meshes_ptr = new Mesh[max_num_meshes];
-  return MeshManager{.valid = true,
-                     .meshes = meshes_ptr,
-                     .meshes_count = 0,
-                     .max_num_meshes = max_num_meshes};
+  return MeshManager{
+      .valid = true,
+      // .meshes = meshes_ptr,
+      .meshes_count = 0,
+      .max_num_meshes = max_num_meshes,
+      .vbos = new unsigned int[max_num_meshes],
+      .ebos = new unsigned int[max_num_meshes],
+      .num_indices_s = new size_t[max_num_meshes],
+  };
 }
 
-auto mesh_manager_destroy_all(MeshManager *mesh_manager) -> void {
-  if (!mesh_manager->valid) {
+auto mesh_manager_destroy_all(MeshManager *manager) -> void {
+  if (!manager->valid) {
     std::println(std::cerr, "Mesh manager not valid");
     return;
   }
-  for (size_t i = 0; i < mesh_manager->meshes_count; ++i) {
-    glDeleteBuffers(1, &mesh_manager->meshes[i].vbo);
-    glDeleteBuffers(1, &mesh_manager->meshes[i].ebo);
+  for (int i = 0; i < manager->meshes_count; ++i) {
+    glDeleteBuffers(1, &manager->vbos[i]);
+    glDeleteBuffers(1, &manager->ebos[i]);
   }
-  delete[] mesh_manager->meshes;
-  mesh_manager->meshes = nullptr;
-  mesh_manager->meshes_count = 0;
-  mesh_manager->valid = false;
+  delete[] manager->vbos;
+  delete[] manager->ebos;
+  delete[] manager->num_indices_s;
+  manager->vbos = nullptr;
+  manager->ebos = nullptr;
+  manager->num_indices_s = nullptr;
+  manager->meshes_count = 0;
+  manager->valid = false;
 }
 
-auto mesh_get(const MeshManager &mesh_manager, MeshHandle handle) -> Mesh * {
-  if (!mesh_manager.valid) {
+auto mesh_validate_handle(const MeshManager &manager, const MeshHandle handle)
+    -> bool {
+  if (!manager.valid) {
     std::println(std::cerr, "Mesh manager not valid");
-    return nullptr;
+    return false;
   }
-  if (handle < 0 || mesh_manager.meshes_count <= handle) {
+  if (handle < 0 || manager.meshes_count <= handle) {
     std::println(std::cerr, "Invalid handle");
-    return nullptr;
+    return false;
   }
-  if (!mesh_manager.meshes[handle].valid) {
+  if (manager.vbos[handle] < 0) {
     std::println(std::cerr, "Mesh for handle not valid");
-    return nullptr;
+    return false;
   }
-  return &mesh_manager.meshes[handle];
+  return true;
 }
 
 // Causes internal fragmentation
-auto mesh_destroy(const MeshManager *mesh_manager, const MeshHandle handle)
-    -> void {
-  if (!mesh_manager->valid) {
+auto mesh_destroy(const MeshManager *manager, const MeshHandle handle) -> void {
+  if (!manager->valid) {
     std::println(std::cerr, "Mesh manager not valid");
     return;
   }
-  auto *const mesh = mesh_get(*mesh_manager, handle);
-  if (mesh == nullptr) {
+  if (!mesh_validate_handle(*manager, handle)) {
     std::println(std::cerr, "Invalid handle");
     return;
   }
-  glDeleteBuffers(1, &mesh->vbo);
-  glDeleteBuffers(1, &mesh->ebo);
-  mesh->valid = false;
+  glDeleteBuffers(1, &manager->vbos[handle]);
+  glDeleteBuffers(1, &manager->ebos[handle]);
+  manager->vbos[handle] = -1;
+  manager->ebos[handle] = -1;
+  manager->num_indices_s[handle] = 0;
 }
 
-auto mesh_create(MeshManager &mesh_manager, const MeshData &mesh_data)
+auto mesh_create(MeshManager &manager, const MeshData &mesh_data)
     -> MeshHandle {
-  if (!mesh_manager.valid) {
+  if (!manager.valid) {
     std::println(std::cerr, "Mesh manager not valid");
     return -1;
   }
@@ -83,9 +92,9 @@ auto mesh_create(MeshManager &mesh_manager, const MeshData &mesh_data)
     std::println(std::cerr, "No indices specified to create mesh");
     return -1;
   }
-  if (mesh_manager.max_num_meshes <= mesh_manager.meshes_count) {
+  if (manager.max_num_meshes <= manager.meshes_count) {
     std::println(std::cerr, "Maximum number of meshes ({}) exceeded",
-                 mesh_manager.max_num_meshes);
+                 manager.max_num_meshes);
     return -1;
   }
 
@@ -100,28 +109,23 @@ auto mesh_create(MeshManager &mesh_manager, const MeshData &mesh_data)
   glNamedBufferStorage(ebo, sizeof(unsigned int) * mesh_data.num_indices,
                        mesh_data.indices, GL_DYNAMIC_STORAGE_BIT);
 
-  const size_t handle = mesh_manager.meshes_count++;
-  mesh_manager.meshes[handle] = Mesh{
-      .valid = true,
-      .vbo = vbo,
-      .ebo = ebo,
-      .num_indices = mesh_data.num_indices,
-  };
+  const auto handle = manager.meshes_count++;
+  manager.vbos[handle] = vbo;
+  manager.ebos[handle] = ebo;
+  manager.num_indices_s[handle] = mesh_data.num_indices;
   return handle;
 }
 
-auto mesh_draw(const MeshManager &mesh_manager, const MeshHandle handle)
-    -> void {
-  const auto *mesh = mesh_get(mesh_manager, handle);
-  if (mesh == nullptr || mesh->valid == false) {
+auto mesh_draw(const MeshManager &manager, const MeshHandle handle) -> void {
+  if (!mesh_validate_handle(manager, handle)) {
     std::println(std::cerr, "Invalid handle");
     return;
   }
   // Hard coded binding index, should come from a VAO manager/object
-  glBindVertexBuffer(0, mesh->vbo, 0, sizeof(Vertex));
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+  glBindVertexBuffer(0, manager.vbos[handle], 0, sizeof(Vertex));
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, manager.ebos[handle]);
 
-  glDrawElements(GL_TRIANGLES, static_cast<int>(mesh->num_indices),
+  glDrawElements(GL_TRIANGLES, static_cast<int>(manager.num_indices_s[handle]),
                  GL_UNSIGNED_INT, nullptr);
   glBindVertexBuffer(0, 0, 0, sizeof(Vertex));
 }
