@@ -8,14 +8,19 @@ auto font_manager_create(const int max_num_fonts) -> FontManager {
     std::println(std::cerr, "Invalid max number of fonts");
     return FontManager{.valid = false};
   }
-  auto* const fonts_ptr = new Font[max_num_fonts];
-  return FontManager{.valid = true,
-                     .fonts = fonts_ptr,
-                     .fonts_count = 0,
-                     .max_num_fonts = max_num_fonts};
+  return FontManager{
+      .valid = true,
+      .fonts_count = 0,
+      .max_num_fonts = max_num_fonts,
+      .bitmaps = new uint8_t*[max_num_fonts],
+      .packed_chars_s = new stbtt_packedchar*[max_num_fonts],
+      .aligned_quads_s = new stbtt_aligned_quad*[max_num_fonts],
+      .charcode_begins = new int[max_num_fonts],
+      .charcode_counts = new int[max_num_fonts],
+  };
 }
 
-auto font_manager_destroy_all(FontManager* manager) -> void {
+auto font_manager_destroy_all(FontManager* const manager) -> void {
   if (manager == nullptr || !manager->valid) {
     std::println(std::cerr, "Invalid font manager");
     return;
@@ -26,28 +31,47 @@ auto font_manager_destroy_all(FontManager* manager) -> void {
   }
 
   manager->valid = false;
-  manager->fonts = nullptr;
   manager->fonts_count = 0;
   manager->max_num_fonts = 0;
+  delete manager->bitmaps;
+  delete manager->packed_chars_s;
+  delete manager->aligned_quads_s;
+  delete manager->charcode_begins;
+  delete manager->charcode_counts;
 }
 
-auto font_get(const FontManager& manager, FontHandle handle) -> Font* {
+auto font_validate_handle(const FontManager& manager, const FontHandle handle)
+    -> bool {
   if (!manager.valid) {
     std::println(std::cerr, "Invalid font manager");
-    return nullptr;
+    return false;
   }
   if (handle < 0 || manager.fonts_count <= handle) {
     std::println(std::cerr, "Invalid font handle");
-    return nullptr;
+    return false;
   }
-  if (!manager.fonts[handle].valid) {
+  if (manager.bitmaps[handle] == nullptr) {
     std::println(std::cerr, "Font for handle not valid");
-    return nullptr;
+    return false;
   }
-  return &manager.fonts[handle];
+  return true;
 }
 
-auto font_create(FontManager* manager, const unsigned char* font_binary_data,
+auto font_get_data(const FontManager& manager, const FontHandle handle)
+    -> FontData {
+  if (!font_validate_handle(manager, handle)) {
+    std::println(stderr, "Invalid font handle");
+    return FontData{.valid = false};
+  }
+  return FontData{.valid = true,
+                  .packed_chars = manager.packed_chars_s[handle],
+                  .aligned_quads = manager.aligned_quads_s[handle],
+                  .charcode_begin = manager.charcode_begins[handle],
+                  .charcode_count = manager.charcode_counts[handle]};
+}
+
+auto font_create(FontManager* const manager,
+                 const unsigned char* font_binary_data,
                  const int charcode_begin, const int charcode_count,
                  const float font_size, const int font_atlas_width,
                  const int font_atlas_height) -> FontHandle {
@@ -82,25 +106,27 @@ auto font_create(FontManager* manager, const unsigned char* font_binary_data,
 
   stbtt_PackEnd(&pack_context);
 
-  const auto new_font = Font{.valid = true,
-                             .bitmap = bitmap,
-                             .packed_chars = packed_chars,
-                             .aligned_quads = aligned_quads,
-                             .charcode_begin = charcode_begin,
-                             .charcode_count = charcode_count};
-  const auto handle = manager->fonts_count++;  // Increase count
-  manager->fonts[handle] = new_font;
+  const FontHandle handle = manager->fonts_count++;
+  manager->bitmaps[handle] = bitmap;
+  manager->packed_chars_s[handle] = packed_chars;
+  manager->aligned_quads_s[handle] = aligned_quads;
+  manager->charcode_begins[handle] = charcode_begin;
+  manager->charcode_counts[handle] = charcode_count;
   return handle;
 }
 
 auto font_destroy(const FontManager* manager, const FontHandle handle) -> void {
-  auto* const font = font_get(*manager, handle);
-  if (font == nullptr) {
+  if (!font_validate_handle(*manager, handle)) {
     std::println(std::cerr, "Invalid font handle");
     return;
   }
 
-  delete font->packed_chars;
-  delete font->aligned_quads;
-  font->valid = false;
+  delete manager->bitmaps[handle];
+  manager->bitmaps[handle] = nullptr;
+  delete manager->packed_chars_s[handle];
+  manager->packed_chars_s[handle] = nullptr;
+  delete manager->aligned_quads_s[handle];
+  manager->aligned_quads_s[handle] = nullptr;
+  manager->charcode_begins[handle] = 0;
+  manager->charcode_counts[handle] = 0;
 }

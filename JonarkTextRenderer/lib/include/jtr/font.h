@@ -5,29 +5,36 @@
 
 #include <cstdint>
 
-struct Font {
+using FontHandle = int;
+
+struct FontData {
   bool valid;
-  uint8_t* bitmap;
   stbtt_packedchar* packed_chars;
   stbtt_aligned_quad* aligned_quads;
   int charcode_begin;
   int charcode_count;
 };
 
-using FontHandle = int;
-
 struct FontManager {
   bool valid;
-  Font* fonts;
   int fonts_count;
   int max_num_fonts;
+
+  uint8_t** bitmaps;
+  stbtt_packedchar** packed_chars_s;
+  stbtt_aligned_quad** aligned_quads_s;
+  int* charcode_begins;
+  int* charcode_counts;
 };
 
 auto font_manager_create(int max_num_fonts) -> FontManager;
 
 auto font_manager_destroy_all(FontManager* manager) -> void;
 
-auto font_get(const FontManager& manager, FontHandle handle) -> Font*;
+auto font_validate_handle(const FontManager& manager, FontHandle handle)
+    -> bool;
+
+auto font_get_data(const FontManager& manager, FontHandle handle) -> FontData;
 
 auto font_create(FontManager* manager, const unsigned char* font_binary_data,
                  int charcode_begin, int charcode_count, float font_size,

@@ -106,12 +106,12 @@ auto main() -> int {
     std::println(stderr, "Could not load font");
     return 1;
   }
-  const auto *const font = font_get(*font_manager, font_handle);
 
   const auto texture_manager = get_smart_manager<TextureManager>(
       texture_manager_create, 2, texture_manager_destroy_all);
-  const auto font_atlas_texture_handle = texture_create(
-      *texture_manager, font->bitmap, font_atlas_width, font_atlas_height);
+  const auto font_atlas_texture_handle =
+      texture_create(*texture_manager, font_manager->bitmaps[font_handle],
+                     font_atlas_width, font_atlas_height);
   if (font_atlas_texture_handle < 0) {
     std::println(std::cerr, "Could not create Texture");
     return 1;
@@ -177,19 +177,25 @@ auto main() -> int {
       .indices = indices,
       .num_indices = sizeof(indices) / sizeof(unsigned int),
   };
-  const auto font_atlas_mesh_handle = mesh_create(*mesh_manager, font_atlas_mesh_data);
+  const auto font_atlas_mesh_handle = mesh_create(*mesh_manager,
+  font_atlas_mesh_data);
   */
 
   static constexpr float pixel_scale = 2.0F / 600.0F;
+  const auto font_data = font_get_data(*font_manager, font_handle);
+  if (!font_data.valid) {
+    std::println(std::cerr, "Font data not valid");
+    return 1;
+  }
   const auto text_mesh_handle =
-      text_create_mesh(*font, mesh_manager.get(), glm::vec2(0.0F, 0.0F), "Hola",
-                       1.0F, pixel_scale);
+      text_create_mesh(font_data, mesh_manager.get(), glm::vec2(0.0F, 0.0F),
+                       "Hola", 1.0F, pixel_scale);
   if (text_mesh_handle < 0) {
     std::println(stderr, "Could not create text_mesh");
     return 1;
   }
   const auto second_text_mesh_handle =
-      text_create_mesh(*font, mesh_manager.get(), glm::vec2(0.0F, 0.5F),
+      text_create_mesh(font_data, mesh_manager.get(), glm::vec2(0.0F, 0.5F),
                        "XDDDD", 1.0F, pixel_scale);
   if (second_text_mesh_handle < 0) {
     std::println(stderr, "Could not create second_text_mesh");
@@ -215,7 +221,8 @@ auto main() -> int {
 
     static constexpr int font_atlas_texture_unit = 0;
     static constexpr auto font_atlas_texture_uniform_name = "font_atlas";
-    texture_bind(*texture_manager, font_atlas_texture_handle, font_atlas_texture_unit);
+    texture_bind(*texture_manager, font_atlas_texture_handle,
+                 font_atlas_texture_unit);
     program_set_uniform(*program_manager, program_handle,
                         font_atlas_texture_uniform_name,
                         font_atlas_texture_unit);

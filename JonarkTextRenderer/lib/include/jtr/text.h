@@ -7,10 +7,14 @@
 
 #include "jtr/font.h"
 
-inline auto text_create_mesh(const Font& font, MeshManager* manager,
+inline auto text_create_mesh(const FontData& font_data, MeshManager* manager,
                              const glm::vec2 position, const std::string& text,
                              const float size, const float pixel_scale)
     -> MeshHandle {
+  if (!font_data.valid) {
+    std::println(stderr, "Font data not valid");
+    return -1;
+  }
   glm::vec2 cursor_position = position;
   const unsigned int num_vertices = text.length() * 4;
   auto* vertices = new Vertex[num_vertices];
@@ -18,13 +22,13 @@ inline auto text_create_mesh(const Font& font, MeshManager* manager,
   auto* indices = new unsigned int[text.length() * 6];
   size_t indices_index = 0;
   for (const auto character : text) {
-    const int index = character - font.charcode_begin;
-    if (index < 0 || font.charcode_count <= index) {
+    const int index = character - font_data.charcode_begin;
+    if (index < 0 || font_data.charcode_count <= index) {
       std::println(stderr, "Could not find character {}", character);
       return -1;
     }
-    const auto packed_char = font.packed_chars[index];
-    const auto aligned_quad = font.aligned_quads[index];
+    const auto packed_char = font_data.packed_chars[index];
+    const auto aligned_quad = font_data.aligned_quads[index];
 
     const auto glyph_size =
         glm::vec2(static_cast<float>(packed_char.x1 - packed_char.x0) *
