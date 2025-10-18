@@ -8,11 +8,11 @@
 using FontHandle = int;
 
 struct FontData {
-  bool valid;
-  stbtt_packedchar* packed_chars;
-  stbtt_aligned_quad* aligned_quads;
-  int charcode_begin;
-  int charcode_count;
+  const bool valid;
+  const stbtt_packedchar* const packed_chars;
+  const stbtt_aligned_quad* const aligned_quads;
+  const int charcode_begin;
+  const int charcode_count;
 };
 
 struct FontManager {
